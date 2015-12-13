@@ -1,0 +1,54 @@
+html,body {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background-color: black;
+}
+.window{
+	position:absolute;
+	display:block;
+	background-color: black;
+	width:400px;
+	height:200px;
+	top:50px;
+	left:200px;
+	border:1px solid white;
+	padding: 0px;
+}
+.titleBar{
+	position:absolute;
+	display:block;
+	background-color: grey;
+	width:100%;
+	height:30px;
+	top:0px;
+	left:0px;		
+}
+.titleBar .close{
+	position: absolute;
+	right:0px;
+	top:0px;
+	width:40px;
+	height:30px;
+	line-height: 30px;
+	text-align: center;
+	font-family: sans-serif;
+	background-color: #800;
+}
+.titleBar .close:hover{
+	background-color: #C00;
+}
+.titleBar .close:active{
+	background-color: #F11;
+}
+.textBox{
+	position:absolute;
+	display:block;
+	width:100%;
+	height:calc( 100% - 30px ) !important;
+	top:30px;
+	left:0px;
+	margin:0px;
+	padding:0px;
+	box-sizing: border-box;
+}
