@@ -14,6 +14,7 @@ html,body {
 	left:200px;
 	border:1px solid white;
 	padding: 0px;
+	resize: both;
 }
 .titleBar{
 	position:absolute;
@@ -51,4 +52,44 @@ html,body {
 	margin:0px;
 	padding:0px;
 	box-sizing: border-box;
+}
+#highlightLeft{
+	position:absolute;
+	display:block;
+	width:50%;
+	height:100%;
+	top:0px;
+	left:0px;
+	background-color: rgba(255,255,255,0.3);
+	visibility: hidden;
+}
+#highlightRight{
+	position:absolute;
+	display:block;
+	width:50%;
+	height:100%;
+	top:0px;
+	left:50%;
+	background-color: rgba(255,255,255,0.3);
+	visibility: hidden;
+}
+#highlightTop{
+	position:absolute;
+	display:block;
+	width:100%;
+	height:50%;
+	top:0px;
+	left:0px;
+	background-color: rgba(255,255,255,0.3);
+	visibility: hidden;
+}
+#highlightBottom{
+	position:absolute;
+	display:block;
+	width:100%;
+	height:50%;
+	top:50%;
+	left:0px;
+	background-color: rgba(255,255,255,0.3);
+	visibility: hidden;
 }
