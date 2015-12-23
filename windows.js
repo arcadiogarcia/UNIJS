@@ -23,7 +23,6 @@ var WM = function () {
         windows.filter(function (x) { return x.z > w.z; }).forEach(function (x) { x.z--; });
         w.z = getTopZ() + 1;
         w.div.style["z-index"] = w.z;
-        console.log(w.z);
     }
     function titleBar(w) {
         var div = document.createElement('div');
@@ -192,7 +191,6 @@ var WM = function () {
         var w = {};
         w.z = getTopZ();
         w.state = "float";
-        console.log(w.z);
         w.id = nextid++;
         w.div = document.createElement('div');
         w.div.className = "window";
@@ -210,25 +208,7 @@ var WM = function () {
         active = w;
         windows.push(w);
         jQuery(function ($, undefined) {
-            $('#term' + w.id).terminal(function (command, term) {
-                if (command == 'cmd') {
-                    var rect = w.div.getBoundingClientRect();
-                    manager.Window(rect.left + 50, rect.top + 50);
-                } else if (command == 'quit') {
-                    setTimeout(WM.close(w.id), 0);
-                } else if (command !== '') {
-                    try {
-                        var result = window.eval(command);
-                        if (result !== undefined) {
-                            term.echo(new String(result));
-                        }
-                    } catch (e) {
-                        term.error(new String(e));
-                    }
-                } else {
-                    term.echo('');
-                }
-            }, {
+            $('#term' + w.id).terminal(CMD().bind(this,w,WM), {
                     greetings: 'Javascript Interpreter',
                     name: 'js_demo',
                     height: 200,
@@ -243,7 +223,7 @@ var WM = function () {
                         }
                         if ((event.which == 84 && event.ctrlKey)) {
                             var rect = active.div.getBoundingClientRect();
-                            manager.Window(rect.left + 50, rect.top + 50);
+                            WM.Window(rect.left + 50, rect.top + 50);
                             return false;
                         }
                         if ((event.which == 37 && event.ctrlKey)) {
