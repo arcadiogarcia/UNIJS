@@ -134,9 +134,9 @@ var WM = function () {
                 }
                 active.state = "snip";
                 active.div.style.top = "0px";
-                active.div.style.left = "10px";
-                active.div.style.width = "calc( 50% - 11px )";
-                active.div.style.height = "calc( 100% - 10px )";
+                active.div.style.left = "1px";
+                active.div.style.width = "calc( 50% - 2px )";
+                active.div.style.height = "calc( 100% - 2px )";
                 break;
             case "right":
                 if (active.state == "float") {
@@ -164,8 +164,8 @@ var WM = function () {
                 }
                 active.state = "snip";
                 active.div.style.top = "0px";
-                active.div.style.left = "10px";
-                active.div.style.width = "calc( 100% - 10px )";
+                active.div.style.left = "0px";
+                active.div.style.width = "calc( 100% - 2px )";
                 active.div.style.height = "50%";
                 break;
             case "bottom":
@@ -181,7 +181,7 @@ var WM = function () {
                 active.div.style.top = "50%";
                 active.div.style.left = "0px";
                 active.div.style.width = "calc( 100% - 2px )";
-                active.div.style.height = "50%";
+                active.div.style.height = "calc( 50% - 2px )";
                 break;
         }
     }
@@ -194,6 +194,7 @@ var WM = function () {
         w.id = nextid++;
         w.div = document.createElement('div');
         w.div.className = "window";
+        w.div.classList.add("appear");
         w.div.style["z-index"] = w.z;
         if (x && y) {
             w.div.style.left = x + "px";
@@ -219,6 +220,9 @@ var WM = function () {
                             var top = windows[(windows.indexOf(active) + 1) % windows.length];
                             moveForeground(top);
                             active = top;
+                            top.div.classList.remove("gotop");
+                            top.div.offsetWidth = top.div.offsetWidth;//Trigger a reflow, necessary for the animation
+                            top.div.classList.add("gotop");
                             return false;
                         }
                         if ((event.which == 84 && event.ctrlKey)) {

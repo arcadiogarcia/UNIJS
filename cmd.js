@@ -6,7 +6,7 @@ var CMD = function () {
         } else if (command == 'hello') {
             term.echo("world");
         } else if (command == 'quit') {
-            setTimeout(WM.close(w.id), 0);
+            setTimeout(manager.close(w.id), 0);
         } else if (command !== '') {
             try {
                 var result = window.eval(command);
