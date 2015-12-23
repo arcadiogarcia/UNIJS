@@ -15,6 +15,7 @@ html,body {
 	border:1px solid white;
 	padding: 0px;
 	resize: both;
+    overflow:auto;
 }
 .titleBar{
 	position:absolute;
