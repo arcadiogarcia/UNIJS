@@ -209,7 +209,7 @@ var WM = function () {
         active = w;
         windows.push(w);
         jQuery(function ($, undefined) {
-            $('#term' + w.id).terminal(CMD().bind(this,w,WM), {
+            $('#term' + w.id).terminal(CMD.open().bind(this,w,WM), {
                     greetings: 'Javascript Interpreter',
                     name: 'js_demo',
                     height: 200,
