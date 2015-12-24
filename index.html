@@ -8,6 +8,8 @@
     <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
     <meta http-equiv="pragma" content="no-cache" />
 
+    <script src="streams.js"></script>
+    <script src="corePrograms.js"></script>
     <script src="cmd.js"></script>
     <script src="jquery.js"></script>
     <script src="terminal.js"></script>
@@ -28,7 +30,7 @@
             var boolean = applicationView.tryEnterFullScreenMode();
         }
         
-        
+        CMD.register(corePrograms);
 		var manager = WM();
 		manager.Window();
     </script>
