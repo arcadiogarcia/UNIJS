@@ -8,7 +8,7 @@ What does that mean? UNIJS is what a non-technical user would probably call an o
 This is useful for creating extensible but controlled sandboxed environments that can run on any computer, for example for programming contests.
 
 ### Are we there yet?
-Nope, sorry. The journey has just started this is what is done:
+Nope, sorry. The journey has just started and this is what is done:
 
   - Basic windows environment
     - Window creation, deletion, resizing, movement, snip, keyboard shortcuts
@@ -19,7 +19,7 @@ And this is still missing:
   - Basic utilites (cat, grep...)
   - Complete stream implementation
   - File system API
-  - Interchangeable OS modules (file system, notificatiosn, whatever...)
+  - Interchangeable OS modules (file system, sensors data, notifications, whatever...)
   - Everything else
   
 Of course, you are welcome to report issues and submit pull requests!
