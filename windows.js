@@ -213,7 +213,8 @@ var WM = function () {
                     greetings: 'Javascript Interpreter',
                     name: 'js_demo',
                     height: 200,
-                    prompt: 'js> ',
+                    prompt: 'UNIJS> ',
+                    exit:false,
                     keydown: function (event) {
                         if ((event.which == 9 && event.ctrlKey)) {
                             event.preventDefault();
