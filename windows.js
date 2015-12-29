@@ -208,12 +208,15 @@ var WM = function () {
         w.div.appendChild(w.textBox);
         active = w;
         windows.push(w);
+        var cmdhandler={cd:function(){return "/"}};
         jQuery(function ($, undefined) {
-            $('#term' + w.id).terminal(CMD.open().bind(this,w,WM), {
+            $('#term' + w.id).terminal(CMD.open().bind(this,cmdhandler,w,WM), {
                     greetings: 'Javascript Interpreter',
                     name: 'js_demo',
                     height: 200,
-                    prompt: "/ >",
+                    prompt: function(callback){
+                        callback(cmdhandler.cd()+" > ");
+                    },
                     exit:false,
                     keydown: function (event) {
                         if ((event.which == 9 && event.ctrlKey)) {

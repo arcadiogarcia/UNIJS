@@ -57,7 +57,8 @@ var CMD = (function () {
         open: function () {
             //Stuff local to each console
             var fs=FS();       
-            return function (w, manager, input, term) {                
+            return function (cmdhandler,w, manager, input, term) {   
+                cmdhandler.cd=fs.getCurrentPath;             
                 var currentStream = Stream();
                 var stdin=currentStream;
                 var pipedCommands = input.split("|");

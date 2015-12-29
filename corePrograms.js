@@ -50,13 +50,13 @@ corePrograms.push({
         if (argv.length == 1) {
             stdout.write(fs.getCurrentPath());
         } else if (argv.length == 2) {
-            var folders = argv[1].split("/");
+            var folders = argv[1].split("/").filter(function(x){return x!="";});
             for (var i = 0; i < folders.length; i++) {
                 if (folders[i] != "..") {
-                    if (fs.navigateChild(argv[1])) {
+                    if (fs.navigateChild(folders[i])) {
 
                     } else {
-                        stdout.write("That folder does not exist");
+                        stdout.write("Folder "+folders[i]+" is not a child of "+fs.getCurrentFolder());
                         break;
                     }
                 } else {
@@ -67,11 +67,6 @@ corePrograms.push({
                         break;
                     }
                 }
-            }
-            if (fs.navigateChild(argv[1])) {
-
-            } else {
-                stdout.write("That folder does not exist");
             }
         } else {
             stdout.write("Wrong number of parameters");
