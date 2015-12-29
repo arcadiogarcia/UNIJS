@@ -2,11 +2,14 @@ var CMD = (function () {
     var programs = {};
     var envVariables = {};
 
-    function executeCommand(input, stdin, w, term,fs) {
+    function executeCommand(input, stdin, w, term, fs) {
         var stdout = Stream();
         var argv = input.split(" ").filter(function (x) { return x != "" });
         var argc = argv.length;
         var command = argv[0];
+        var returned = 0;
+        var async = function () { returned = -1; };
+        var _return = function () { if (returned == 0) { returned = 1; term.pop(); } };
         switch (command) {
             case "cmd":
                 var rect = w.div.getBoundingClientRect();
@@ -18,6 +21,17 @@ var CMD = (function () {
                     term.echo("You should use 'set variable value'");
                 } else {
                     envVariables[argv[1]] = argv[2];
+                    switch (argv[1]) {
+                        case "wallpaper":
+                            document.body.style["background-image"] = "url('" + argv[2] + "')";
+                            document.body.style["background-size"] = "cover";
+                            document.body.style["background-position"] = "center center";
+                            break;
+                        case "accentColor":
+                            var stylesheet = document.styleSheets[0];
+                            stylesheet.cssRules[2].style.backgroundColor = argv[2];
+                            break;
+                    }
                 }
                 break;
             case "get":
@@ -33,11 +47,12 @@ var CMD = (function () {
                 break;
             default:
                 if (programs[command]) {
-                    programs[command].entryPoint(argv, stdin, stdout,fs, function () { term.pop(); });
+                    programs[command].entryPoint(argv, stdin, stdout, fs, _return, async);
                 } else {
                     term.echo("Unknown command \"" + command + "\"");
                 }
         }
+        _return();
         return stdout;
     }
 
@@ -56,11 +71,11 @@ var CMD = (function () {
         },
         open: function () {
             //Stuff local to each console
-            var fs=FS();       
-            return function (cmdhandler,w, manager, input, term) {   
-                cmdhandler.cd=fs.getCurrentPath;             
+            var fs = FS();
+            return function (cmdhandler, w, manager, input, term) {
+                cmdhandler.cd = fs.getCurrentPath;
                 var currentStream = Stream();
-                var stdin=currentStream;
+                var stdin = currentStream;
                 var pipedCommands = input.split("|");
                 term.push(function (input, term) {
                     stdin.write(input);
@@ -76,7 +91,7 @@ var CMD = (function () {
                         }
                     });
                 for (var i = 0; i < pipedCommands.length; i++) {
-                    currentStream = executeCommand(pipedCommands[i], currentStream, w, term,fs);
+                    currentStream = executeCommand(pipedCommands[i], currentStream, w, term, fs);
                 }
                 currentStream.on("data", function (x) {
                     term.echo(x);
