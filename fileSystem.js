@@ -82,8 +82,9 @@ var FS = (function () {
             return path;
         },
         navigateUp: function () {
+            console.log(currentFolder.getParent());
             if (currentFolder.getParent() != null) {
-                currentFolder = currentFolder.getParent();
+                currentFolder = getFolderId(currentFolder.getParent());
                 return true;
             }
             return false;

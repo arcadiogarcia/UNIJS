@@ -50,12 +50,30 @@ corePrograms.push({
         if (argv.length == 1) {
             stdout.write(fs.getCurrentPath());
         } else if (argv.length == 2) {
+            var folders = argv[1].split("/");
+            for (var i = 0; i < folders.length; i++) {
+                if (folders[i] != "..") {
+                    if (fs.navigateChild(argv[1])) {
+
+                    } else {
+                        stdout.write("That folder does not exist");
+                        break;
+                    }
+                } else {
+                    if (fs.navigateUp()) {
+
+                    } else {
+                        stdout.write("You are already in the root folder");
+                        break;
+                    }
+                }
+            }
             if (fs.navigateChild(argv[1])) {
 
             } else {
                 stdout.write("That folder does not exist");
             }
-        }else{
+        } else {
             stdout.write("Wrong number of parameters");
         }
         _return();
@@ -68,12 +86,12 @@ corePrograms.push({
     man: "",
     entryPoint: function (argv, stdin, stdout, fs, _return) {
         if (argv.length == 2) {
-           if (fs.createFolder(argv[1])) {
+            if (fs.createFolder(argv[1])) {
 
             } else {
                 stdout.write("That folder already exists");
             }
-        } else{
+        } else {
             stdout.write("Wrong number of parameters");
         }
         _return();
@@ -85,9 +103,48 @@ corePrograms.push({
     alias: ["ls"],
     man: "",
     entryPoint: function (argv, stdin, stdout, fs, _return) {
-        if (argv.length ==1 ) {
-           fs.getChilds().forEach(stdout.write);
-        } else{
+        if (argv.length == 1) {
+            fs.getChilds().forEach(stdout.write);
+        } else {
+            stdout.write("Wrong number of parameters");
+        }
+        _return();
+    }
+});
+
+corePrograms.push({
+    name: "tree",
+    alias: [],
+    man: "",
+    entryPoint: function (argv, stdin, stdout, fs, _return) {
+        function printTree(level, levelsfinished) {
+            var tabs = "", i = 0;
+            level = level || 0;
+            levelsfinished = levelsfinished || 0;
+            while (i++ < level-levelsfinished) {
+                tabs += "│";
+            }
+            i=0;
+            while (i++ < levelsfinished) {
+                tabs += " ";
+            }
+            var childs = fs.getChilds();
+            for (i = 0; i < childs.length; i++) {
+                fs.navigateChild(childs[i]);
+                if (i != childs.length - 1) {
+                    stdout.write(tabs + "├── " + childs[i]);
+                } else {
+                    levelsfinished+=1;
+                    stdout.write(tabs + "└── " + childs[i]);
+                }
+                printTree(level + 1, levelsfinished);
+                fs.navigateUp();
+            }
+        }
+        if (argv.length == 1) {
+            stdout.write(fs.getCurrentFolder());
+            printTree();
+        } else {
             stdout.write("Wrong number of parameters");
         }
         _return();

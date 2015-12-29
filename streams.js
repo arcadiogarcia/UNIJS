@@ -8,7 +8,7 @@ var Stream = function () {
             switch (action) {
                 case "data":
                     while (writeStack.length) {
-                        callback(writeStack.pop());
+                        callback(writeStack.shift());//FIFO
                     }
                     break;
                 case "end":
