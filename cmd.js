@@ -2,7 +2,7 @@ var CMD = (function () {
     var programs = {};
     var envVariables = {};
 
-    function executeCommand(input, stdin, w, term) {
+    function executeCommand(input, stdin, w, term,fs) {
         var stdout = Stream();
         var argv = input.split(" ").filter(function (x) { return x != "" });
         var argc = argv.length;
@@ -33,7 +33,7 @@ var CMD = (function () {
                 break;
             default:
                 if (programs[command]) {
-                    programs[command].entryPoint(argv, stdin, stdout, function () { term.pop(); });
+                    programs[command].entryPoint(argv, stdin, stdout,fs, function () { term.pop(); });
                 } else {
                     term.echo("Unknown command \"" + command + "\"");
                 }
@@ -55,7 +55,9 @@ var CMD = (function () {
             });
         },
         open: function () {
-            return function (w, manager, input, term) {
+            //Stuff local to each console
+            var fs=FS();       
+            return function (w, manager, input, term) {                
                 var currentStream = Stream();
                 var stdin=currentStream;
                 var pipedCommands = input.split("|");
@@ -73,7 +75,7 @@ var CMD = (function () {
                         }
                     });
                 for (var i = 0; i < pipedCommands.length; i++) {
-                    currentStream = executeCommand(pipedCommands[i], currentStream, w, term);
+                    currentStream = executeCommand(pipedCommands[i], currentStream, w, term,fs);
                 }
                 currentStream.on("data", function (x) {
                     term.echo(x);

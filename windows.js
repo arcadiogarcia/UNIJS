@@ -213,7 +213,7 @@ var WM = function () {
                     greetings: 'Javascript Interpreter',
                     name: 'js_demo',
                     height: 200,
-                    prompt: 'UNIJS> ',
+                    prompt: "/ >",
                     exit:false,
                     keydown: function (event) {
                         if ((event.which == 9 && event.ctrlKey)) {

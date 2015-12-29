@@ -25,7 +25,7 @@ var FS = (function () {
             getName: function () { return name },
             getChilds: function () { return childs },
             getParent: function () { return parent },
-            addChild: function (c) { childs.push(c.getId()); save() }
+            addChild: function (c) { childs.push({id:c.getId(),name:c.getName()}); save() }
         };
     }
     
@@ -47,7 +47,7 @@ var FS = (function () {
             getName: function () { return name },
             getChilds: function () { return childs },
             getParent: function () { return parent },
-            addChild: function (c) { childs.push(c.getId()); save() }
+            addChild: function (c) { childs.push({id:c.getId(),name:c.getName()}); save() }
         };
     }
 
@@ -67,7 +67,7 @@ var FS = (function () {
 
     return {
         getChilds: function () {
-            return currentFolder.getChilds();
+            return currentFolder.getChilds().map(function(x){return x.name;});
         },
         getCurrentFolder: function () {
             return currentFolder.getName();
@@ -75,9 +75,9 @@ var FS = (function () {
         getCurrentPath: function () {
             var path = "/";
             var cd = currentFolder;
-            while (cd.getParent() != null) {
+            while (cd && cd.getParent() != null) {
                 path = "/" + cd.getName() + path;
-                cd = cd.getParent();
+                cd=getFolderId(cd.getParent());
             }
             return path;
         },
@@ -90,13 +90,21 @@ var FS = (function () {
         },
         navigateChild: function (name) {
             var childs=currentFolder.getChilds();
-            childs=childs.map(function (id){return getFolderId(id);});
-            childs=childs.filter(function(c){return c.getName()==name;});
+            childs=childs.filter(function(c){return c.name==name;});
             if (childs.length==0){
                 return false;
             }
-            currentFolder=childs[0];
+            currentFolder=getFolderId(childs[0].id);
             return true;
+        },
+        createFolder: function (name) {
+            var childs=currentFolder.getChilds();
+            childs=childs.filter(function(c){return c.name==name;});
+            if (childs.length==0){
+                currentFolder.addChild(Folder(name,currentFolder.getId()));
+                return true;
+            }
+            return false;
         }
     };
-})();
+});
