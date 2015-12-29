@@ -1,0 +1,22 @@
+@keyframes appear {
+    from {opacity:0;margin-top:50px;}
+    to {opacity: 1;margin-top:0px;}
+ }
+ 
+ .appear {
+    animation-name: appear;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-out;
+ } 
+ 
+ @keyframes gotop {
+    0% {opacity:0.4;transform:scaleX(0.6) scaleY(0.6);}
+    70% {opacity: 1;transform:scaleX(1.2) scaleY(1.2);}
+    100% {opacity: 1;transform:scaleX(1) scaleY(1);}
+ }
+ 
+ .gotop {
+    animation-name: gotop;
+    animation-duration: 0.3s;
+    animation-timing-function: ease-out;
+ } 
