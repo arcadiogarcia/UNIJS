@@ -1,7 +1,31 @@
-var CMD = (function () {
+var CMD_MODULE = (function () {
     var programs = {};
-    var alias={};
-    var envVariables = {};
+    var alias = {};
+    var envVariables;
+    if (!localStorage.envVariables) {
+        envVariables={};
+    } else {
+        envVariables = JSON.parse(localStorage.envVariables);
+        for(var e in envVariables){
+            setEnvVar(e,envVariables[e]);
+        }
+    }
+
+
+    function setEnvVar(key, value) {
+        envVariables[key] = value;
+        switch (key) {
+            case "wallpaper":
+                document.body.style["background-image"] = "url('" + value + "')";
+                document.body.style["background-size"] = "cover";
+                document.body.style["background-position"] = "center center";
+                break;
+            case "accentColor":
+                var stylesheet = document.styleSheets[0];
+                stylesheet.cssRules[2].style.backgroundColor = value;
+                break;
+        }
+    }
 
     var hardcodedMan = {
         "cmd": "Opens a new terminal",
@@ -29,18 +53,8 @@ var CMD = (function () {
                     stdout.write("Incorrect number of parameters.");
                     stdout.write("You should use 'set variable value'");
                 } else {
-                    envVariables[argv[1]] = argv[2];
-                    switch (argv[1]) {
-                        case "wallpaper":
-                            document.body.style["background-image"] = "url('" + argv[2] + "')";
-                            document.body.style["background-size"] = "cover";
-                            document.body.style["background-position"] = "center center";
-                            break;
-                        case "accentColor":
-                            var stylesheet = document.styleSheets[0];
-                            stylesheet.cssRules[2].style.backgroundColor = argv[2];
-                            break;
-                    }
+                    setEnvVar(argv[1], argv[2]);
+                    localStorage.envVariables = JSON.stringify(envVariables);
                 }
                 break;
             case "get":
@@ -60,21 +74,21 @@ var CMD = (function () {
                     if (hardcodedMan[argv[1]]) {
                         stdout.write(hardcodedMan[argv[1]]);
                     } else if (programs[argv[1]]) {
-                        if(programs[argv[1]].alias.length>0){
-                            stdout.write("Aliases: "+programs[argv[1]].alias.join());
+                        if (programs[argv[1]].alias.length > 0) {
+                            stdout.write("Aliases: " + programs[argv[1]].alias.join());
                         }
                         stdout.write(programs[argv[1]].man);
-                    }else if (alias[argv[1]]) {
-                        stdout.write("Alias of "+alias[argv[1]]);
+                    } else if (alias[argv[1]]) {
+                        stdout.write("Alias of " + alias[argv[1]]);
                     }
                 } else {
                     stdout.write("You can use the following commands:");
                     //Hardcoded commands
                     for (var p in hardcodedMan) {
-                        stdout.write("  "+p);
+                        stdout.write("  " + p);
                     }
                     for (var p in programs) {
-                        stdout.write("  "+p);
+                        stdout.write("  " + p);
                     }
                     stdout.write("Use 'man <command>' to get more information");
                 }
@@ -136,4 +150,4 @@ var CMD = (function () {
             };
         }
     };
-})();
+});
