@@ -5,7 +5,7 @@ corePrograms.push({
     alias: [],
     man: "This command gives you info about the system.",
     entryPoint: function (argv, stdin, stdout, fs, _return,async) {
-        stdout.end("System version");
+        stdout.end("UNIJS 0.1");
         _return();
     }
 });
@@ -13,7 +13,7 @@ corePrograms.push({
 corePrograms.push({
     name: "echo",
     alias: [],
-    man: "This command behaves like a parrot.",
+    man: "This command behaves like a parrot.\nExecute with no arguments to pipe the input to the output.\nExecute with arguments to print them in the output.",
     entryPoint: function (argv, stdin, stdout, fs, _return,async) {
         if (argv.length > 1) {
             for (var i = 1; i < argv.length; i++) {
@@ -31,7 +31,7 @@ corePrograms.push({
 corePrograms.push({
     name: "caesar",
     alias: [],
-    man: "Vini, vidi, encodi",
+    man: "Vini, vidi, encodi.\n Must be executed with one argument, 'caesar n' \n It will add n to the unicode code of each character in the input and print it to output.",
     entryPoint: function (argv, stdin, stdout, fs, _return,async) {
         if (argv.length != 2) {
             _return();
@@ -47,7 +47,7 @@ corePrograms.push({
 corePrograms.push({
     name: "cd",
     alias: [],
-    man: "",
+    man: "Executed with no arguments, prints the current path.\nExecuted with one argument, navigates to that relative path.",
     entryPoint: function (argv, stdin, stdout, fs, _return,async) {
         if (argv.length == 1) {
             stdout.write(fs.getCurrentPath());
@@ -80,7 +80,7 @@ corePrograms.push({
 corePrograms.push({
     name: "mkdir",
     alias: [],
-    man: "",
+    man: "Creates a folder in the current folder, the name must be specified in the first parameter.",
     entryPoint: function (argv, stdin, stdout, fs, _return,async) {
         if (argv.length == 2) {
             if (fs.createFolder(argv[1])) {
@@ -98,7 +98,7 @@ corePrograms.push({
 corePrograms.push({
     name: "ls",
     alias: ["dir"],
-    man: "",
+    man: "Shows the content of the current folder.",
     entryPoint: function (argv, stdin, stdout, fs, _return,async) {
         if (argv.length == 1) {
             fs.getChilds().forEach(stdout.write);
@@ -112,7 +112,7 @@ corePrograms.push({
 corePrograms.push({
     name: "tree",
     alias: [],
-    man: "",
+    man: "Prints the structure of the current folder as a tree.",
     entryPoint: function (argv, stdin, stdout, fs, _return,async) {
         function printTree(level, levelsfinished) {
             var tabs = "", i = 0;

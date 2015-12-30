@@ -211,7 +211,7 @@ var WM = function () {
         var cmdhandler={cd:function(){return "/"}};
         jQuery(function ($, undefined) {
             $('#term' + w.id).terminal(CMD.open().bind(this,cmdhandler,w,WM), {
-                    greetings: 'Javascript Interpreter',
+                    greetings: 'UNIJS',
                     name: 'js_demo',
                     height: 200,
                     prompt: function(callback){
