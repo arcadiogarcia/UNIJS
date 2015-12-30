@@ -3,11 +3,11 @@ var CMD_MODULE = (function () {
     var alias = {};
     var envVariables;
     if (!localStorage.envVariables) {
-        envVariables={};
+        envVariables = {};
     } else {
         envVariables = JSON.parse(localStorage.envVariables);
-        for(var e in envVariables){
-            setEnvVar(e,envVariables[e]);
+        for (var e in envVariables) {
+            setEnvVar(e, envVariables[e]);
         }
     }
 
@@ -139,7 +139,30 @@ var CMD_MODULE = (function () {
                         }
                     });
                 for (var i = 0; i < pipedCommands.length; i++) {
-                    currentStream = executeCommand(pipedCommands[i], currentStream, w, term, fs);
+                    var command = pipedCommands[i];
+                    var subcommands;
+                    if (command.indexOf("<") != -1) {
+                        subcommands = command.split("<");
+                        var file=fs.readFile(subcommands[1]);
+                        if(file===false){
+                            term.echo("File "+subcommands[1]+" does not exist.");
+                            term.pop();
+                            return;
+                        }
+                        currentStream = executeCommand(subcommands[0], file, w, term, fs);
+                    } else if (command.indexOf(">>") != -1) {
+                        subcommands = command.split(">>");
+                        var appendStream = executeCommand(subcommands[0], currentStream, w, term, fs);
+                        fs.appendFile(subcommands[1], appendStream);
+                        currentStream = Stream();
+                    } else if (command.indexOf(">") != -1) {
+                        subcommands = command.split(">");
+                        var writeStream = executeCommand(subcommands[0], currentStream, w, term, fs);
+                        fs.writeFile(subcommands[1], writeStream);
+                        currentStream = Stream();
+                    } else {
+                        currentStream = executeCommand(pipedCommands[i], currentStream, w, term, fs);
+                    }
                 }
                 currentStream.on("data", function (x) {
                     term.echo(x);
