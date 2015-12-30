@@ -96,8 +96,8 @@ corePrograms.push({
 });
 
 corePrograms.push({
-    name: "dir",
-    alias: ["ls"],
+    name: "ls",
+    alias: ["dir"],
     man: "",
     entryPoint: function (argv, stdin, stdout, fs, _return,async) {
         if (argv.length == 1) {

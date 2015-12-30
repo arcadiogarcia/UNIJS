@@ -1,6 +1,15 @@
 var CMD = (function () {
     var programs = {};
+    var alias={};
     var envVariables = {};
+
+    var hardcodedMan = {
+        "cmd": "Opens a new terminal",
+        "set": "Sets a environment variable",
+        "get": "Gets an environment variable",
+        "quit": "Closes the terminal",
+        "man": "Gives info about a command"
+    };
 
     function executeCommand(input, stdin, w, term, fs) {
         var stdout = Stream();
@@ -17,8 +26,8 @@ var CMD = (function () {
                 break;
             case "set":
                 if (argc != 3) {
-                    term.echo("Incorrect number of parameters.");
-                    term.echo("You should use 'set variable value'");
+                    stdout.write("Incorrect number of parameters.");
+                    stdout.write("You should use 'set variable value'");
                 } else {
                     envVariables[argv[1]] = argv[2];
                     switch (argv[1]) {
@@ -36,20 +45,45 @@ var CMD = (function () {
                 break;
             case "get":
                 if (argc != 2) {
-                    term.echo("Incorrect number of parameters.");
-                    term.echo("You should use 'get variable'");
+                    stdout.write("Incorrect number of parameters.");
+                    stdout.write("You should use 'get variable'");
                 } else {
-                    term.echo(envVariables[argv[1]]);
+                    stdout.write(envVariables[argv[1]]);
                 }
                 break;
             case "quit":
                 setTimeout(manager.close(w.id), 0);
                 break;
+            case "man":
+            case "help":
+                if (argc == 2) {
+                    if (hardcodedMan[argv[1]]) {
+                        stdout.write(hardcodedMan[argv[1]]);
+                    } else if (programs[argv[1]]) {
+                        if(programs[argv[1]].alias.length>0){
+                            stdout.write("Aliases: "+programs[argv[1]].alias.join());
+                        }
+                        stdout.write(programs[argv[1]].man);
+                    }else if (alias[argv[1]]) {
+                        stdout.write("Alias of "+alias[argv[1]]);
+                    }
+                } else {
+                    stdout.write("You can use the following commands:");
+                    //Hardcoded commands
+                    for (var p in hardcodedMan) {
+                        stdout.write("  "+p);
+                    }
+                    for (var p in programs) {
+                        stdout.write("  "+p);
+                    }
+                    stdout.write("Use 'man <command>' to get more information");
+                }
+                break;
             default:
                 if (programs[command]) {
                     programs[command].entryPoint(argv, stdin, stdout, fs, _return, async);
                 } else {
-                    term.echo("Unknown command \"" + command + "\"");
+                    stdout.write("Unknown command \"" + command + "\"");
                 }
         }
         _return();
@@ -65,7 +99,7 @@ var CMD = (function () {
                 }
                 programs[x.name] = x;
                 x.alias.forEach(function (y) {
-                    programs[y] = x;
+                    alias[y] = x.name;
                 });
             });
         },
