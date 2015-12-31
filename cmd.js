@@ -42,7 +42,7 @@ var CMD_MODULE = (function () {
         var command = argv[0];
         var returned = 0;
         var async = function () { returned = -1; };
-        var _return = function () { if (returned == 0) { returned = 1; term.pop(); } };
+        var _return = function () {returned = 1;stdout.end() };
         switch (command) {
             case "cmd":
                 var rect = w.div.getBoundingClientRect();
@@ -100,7 +100,11 @@ var CMD_MODULE = (function () {
                     stdout.write("Unknown command \"" + command + "\"");
                 }
         }
-        _return();
+        //Make sure non-async program returns
+        if (returned == 0) {
+            returned = 1; 
+            stdout.end();
+        } 
         return stdout;
     }
 
@@ -143,7 +147,7 @@ var CMD_MODULE = (function () {
                     var subcommands;
                     if (command.indexOf("<") != -1) {
                         subcommands = command.split("<");
-                        var file=fs.readFile(subcommands[1]);
+                        var file=fs.readFile(subcommands[1].split(" ").filter(function(x){return x!="";})[0]);
                         if(file===false){
                             term.echo("File "+subcommands[1]+" does not exist.");
                             term.pop();
@@ -153,12 +157,13 @@ var CMD_MODULE = (function () {
                     } else if (command.indexOf(">>") != -1) {
                         subcommands = command.split(">>");
                         var appendStream = executeCommand(subcommands[0], currentStream, w, term, fs);
-                        fs.appendFile(subcommands[1], appendStream);
+                        appendStream.unshift("\n");
+                        fs.appendFile(subcommands[1].split(" ").filter(function(x){return x!="";})[0], appendStream);
                         currentStream = Stream();
                     } else if (command.indexOf(">") != -1) {
                         subcommands = command.split(">");
                         var writeStream = executeCommand(subcommands[0], currentStream, w, term, fs);
-                        fs.writeFile(subcommands[1], writeStream);
+                        fs.writeFile(subcommands[1].split(" ").filter(function(x){return x!="";})[0], writeStream);
                         currentStream = Stream();
                     } else {
                         currentStream = executeCommand(pipedCommands[i], currentStream, w, term, fs);
@@ -168,7 +173,7 @@ var CMD_MODULE = (function () {
                     term.echo(x);
                 });
                 currentStream.on("end", function (x) {
-                    term.echo(x);
+                    term.pop();
                 });
             };
         }

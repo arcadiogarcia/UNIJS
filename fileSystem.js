@@ -26,7 +26,7 @@ var FS = (function () {
             getName: function () { return name },
             getChilds: function () { return childs },
             getParent: function () { return parent },
-            addChild: function (c) { childs.push({ id: c.getId(), name: c.getName(),type:c.getType()  }); save() }
+            addChild: function (c) { childs.push({ id: c.getId(), name: c.getName(), type: c.getType() }); save() }
         };
     }
 
@@ -69,7 +69,7 @@ var FS = (function () {
             getName: function () { return name },
             getChilds: function () { return childs },
             getParent: function () { return parent },
-            addChild: function (c) { childs.push({ id: c.getId(), name: c.getName(),type:c.getType() }); save() }
+            addChild: function (c) { childs.push({ id: c.getId(), name: c.getName(), type: c.getType() }); save() }
         };
     }
 
@@ -120,7 +120,7 @@ var FS = (function () {
 
     return {
         getChilds: function () {
-            return currentFolder.getChilds().map(function (x) { return {name:x.name, type:x.type}; });
+            return currentFolder.getChilds().map(function (x) { return { name: x.name, type: x.type }; });
         },
         getCurrentFolder: function () {
             return currentFolder.getName();
@@ -174,8 +174,15 @@ var FS = (function () {
             var childs = currentFolder.getChilds();
             childs = childs.filter(function (c) { return c.name == name; });
             if (childs.length != 0) {
-                var file = getItemId(childs[0].id);
-                stream.write(file.getData());
+                Stream.executeAsync(function () {
+                    var file = getItemId(childs[0].id);
+                    var chunks = file.getData().split("\n").map(function (x) { return x + "\n" });
+                    if (chunks[chunks.length - 1] == "\n") {
+                        chunks.pop();//To avoid creating a new empty line
+                    }
+                    chunks.forEach(stream.write);
+                    stream.end();
+                });
                 return stream;
             }
             return false;

@@ -1,7 +1,7 @@
 var Stream = function () {
     var handlers = {};
     var writeStack = [];
-    var end;
+    var end,ended=false;
     return {
         on: function (action, callback) {
             handlers[action] = callback;
@@ -12,7 +12,7 @@ var Stream = function () {
                     }
                     break;
                 case "end":
-                    if (typeof end !== "undefined") {
+                    if (ended==true) {
                         callback(end);
                     }
                     break;
@@ -27,13 +27,22 @@ var Stream = function () {
                 writeStack.push(data);
             }
         },
-        end: function (data) {
-            if (typeof handlers["end"] === "function") {
-                handlers["end"](data);
+        unshift: function (data) {
+            if (typeof handlers["data"] === "function") {
+                handlers["data"](data);
             } else {
-                if (typeof end !== "undefined") {
+                writeStack.unshift(data);
+            }
+        },
+        end: function (data) {
+            if (ended==false) {
+                ended=true;
+                if (typeof handlers["end"] === "function") {
+                    handlers["end"](data);
+                }else {
                     end = data;
                 }
+                
             }
         },
         pipe: function (stream) {
@@ -42,3 +51,8 @@ var Stream = function () {
         }
     };
 };
+
+
+Stream.executeAsync = function (cb) {
+    window.setTimeout(cb, 0);
+}
