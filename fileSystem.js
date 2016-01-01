@@ -34,9 +34,11 @@ var FS = (function () {
         var name = name_i;
         var id = getNextId();
         var data = data_i;
+        var lock = Lock();
 
         function save() {
-            localStorage[id] = JSON.stringify({ name: name, id: id, data: data, type: "file" });
+            localStorage[id] = JSON.stringify({ name: name, id: id, type: "file", lock: lock.toString(), data: data });
+            console.log(localStorage[id]);
         }
         save();
 
@@ -46,7 +48,11 @@ var FS = (function () {
             getName: function () { return name },
             getData: function () { return data },
             setData: function (data_n) { data = data_n; save(); },
-            addData: function (data_n) { data += data_n; save(); }
+            addData: function (data_n) { data += data_n; save(); },
+            slock: function () { var r=lock.slock();save(); return r; },
+            xlock: function () { var r=lock.xlock(); save();return r; },
+            sunlock: function () { var r=lock.sunlock(); save();return r; },
+            xunlock: function () { var r=lock.xunlock(); save(); return r;}
         };
     }
 
@@ -61,7 +67,6 @@ var FS = (function () {
             localStorage[id] = JSON.stringify({ name: name, childs: childs, parent: parent, id: id, type: "folder" });
         }
 
-        save();
 
         return {
             getId: function () { return id },
@@ -78,11 +83,11 @@ var FS = (function () {
         var name = f.name;
         var id = f.id;
         var data = f.data;
+        var lock = Lock(f.lock)
 
         function save() {
-            localStorage[id] = JSON.stringify({ name: name, id: id, data: data, type: "file" });
+            localStorage[id] = JSON.stringify({ name: name, id: id, type: "file", lock: lock.toString(), data: data });
         }
-        save();
 
         return {
             getId: function () { return id },
@@ -90,7 +95,11 @@ var FS = (function () {
             getName: function () { return name },
             getData: function () { return data },
             setData: function (data_n) { data = data_n; save(); },
-            addData: function (data_n) { data += data_n; save(); }
+            addData: function (data_n) { data += data_n; save(); },
+            slock: function () { var r=lock.slock();save(); return r; },
+            xlock: function () { var r=lock.xlock(); save();return r; },
+            sunlock: function () { var r=lock.sunlock(); save();return r; },
+            xunlock: function () { var r=lock.xunlock(); save(); return r;}
         };
     }
 
@@ -176,11 +185,18 @@ var FS = (function () {
             if (childs.length != 0) {
                 Stream.executeAsync(function () {
                     var file = getItemId(childs[0].id);
+                    if (file.slock()) {
+
+                    } else {
+                        stream="Locked";
+                        return;
+                    }
                     var chunks = file.getData().split("\n").map(function (x) { return x + "\n" });
                     if (chunks[chunks.length - 1] == "\n") {
                         chunks.pop();//To avoid creating a new empty line
                     }
                     chunks.forEach(stream.write);
+                    file.sunlock();
                     stream.end();
                 });
                 return stream;
@@ -197,9 +213,17 @@ var FS = (function () {
                 file = File(name, "");
                 currentFolder.addChild(file);
             }
+            if (file.xlock()) {
+
+            } else {
+                return false; //Locked file
+            }
             file.setData("");
             stream.on("data", function (x) {
                 file.addData(x);
+            });
+            stream.on("end", function (x) {
+                file.xunlock()
             });
             return true;
         },
@@ -213,8 +237,16 @@ var FS = (function () {
                 file = File(name, "");
                 currentFolder.addChild(file);
             }
+            if (file.xlock()) {
+
+            } else {
+                return false; //Locked file
+            }
             stream.on("data", function (x) {
                 file.addData(x);
+            });
+            stream.on("end", function (x) {
+                file.xunlock()
             });
             return true;
         }

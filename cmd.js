@@ -42,7 +42,7 @@ var CMD_MODULE = (function () {
         var command = argv[0];
         var returned = 0;
         var async = function () { returned = -1; };
-        var _return = function () {returned = 1;stdout.end() };
+        var _return = function () { returned = 1; stdout.end() };
         switch (command) {
             case "cmd":
                 var rect = w.div.getBoundingClientRect();
@@ -102,9 +102,9 @@ var CMD_MODULE = (function () {
         }
         //Make sure non-async program returns
         if (returned == 0) {
-            returned = 1; 
+            returned = 1;
             stdout.end();
-        } 
+        }
         return stdout;
     }
 
@@ -147,24 +147,49 @@ var CMD_MODULE = (function () {
                     var subcommands;
                     if (command.indexOf("<") != -1) {
                         subcommands = command.split("<");
-                        var file=fs.readFile(subcommands[1].split(" ").filter(function(x){return x!="";})[0]);
-                        if(file===false){
-                            term.echo("File "+subcommands[1]+" does not exist.");
+                        var file = fs.readFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0]);
+                        if (file === false) {
+                            term.echo("File " + subcommands[1] + " does not exist.");
+                            term.pop();
+                            return;
+                        }
+                        if (file === "Locked") {
+                            term.echo("This file is locked by another program.");
                             term.pop();
                             return;
                         }
                         currentStream = executeCommand(subcommands[0], file, w, term, fs);
                     } else if (command.indexOf(">>") != -1) {
                         subcommands = command.split(">>");
-                        var appendStream = executeCommand(subcommands[0], currentStream, w, term, fs);
-                        appendStream.unshift("\n");
-                        fs.appendFile(subcommands[1].split(" ").filter(function(x){return x!="";})[0], appendStream);
-                        currentStream = Stream();
+                        var outputstream = executeCommand(subcommands[0], currentStream, w, term, fs);
+                        var tee=StreamTee();
+                        outputstream.pipe(tee);
+                        var writestream=Stream();
+                        tee.on1("data",function(x){writestream.write("\n"+x);});
+                        tee.on1("end",writestream.end);
+                        var consolestream=Stream();
+                        tee.on2("end",consolestream.end);
+                        if (fs.appendFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
+                            term.echo("This file is locked by another program.");
+                            term.pop();
+                            return;
+                        }
+                        currentStream = consolestream;
                     } else if (command.indexOf(">") != -1) {
                         subcommands = command.split(">");
-                        var writeStream = executeCommand(subcommands[0], currentStream, w, term, fs);
-                        fs.writeFile(subcommands[1].split(" ").filter(function(x){return x!="";})[0], writeStream);
-                        currentStream = Stream();
+                        var outputstream = executeCommand(subcommands[0], currentStream, w, term, fs);
+                        var tee=StreamTee();
+                        outputstream.pipe(tee);
+                        var writestream=Stream();
+                        tee.pipe1(writestream);
+                        var consolestream=Stream();
+                        tee.on2("end",consolestream.end);
+                        if (fs.writeFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
+                            term.echo("This file is locked by another program.");
+                            term.pop();
+                            return;
+                        }
+                        currentStream = consolestream;
                     } else {
                         currentStream = executeCommand(pipedCommands[i], currentStream, w, term, fs);
                     }

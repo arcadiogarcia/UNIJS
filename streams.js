@@ -46,11 +46,43 @@ var Stream = function () {
             }
         },
         pipe: function (stream) {
-            handlers["data"] = stream.write;
-            handlers["end"] = stream.end;
+            this.on("data",stream.write);
+            this.on("end",stream.end);
         }
     };
 };
+
+
+var StreamTee=function(){
+    var s1=Stream();
+    var s2=Stream();
+     return {
+        on1: function (action, callback) {
+            s1.on(action,callback);
+        },
+        on2: function (action, callback) {
+            s2.on(action,callback);
+        },
+        write: function (data) {
+            s1.write(data);
+            s2.write(data);
+        },
+        unshift: function (data) {
+            s1.unshift(data);
+            s2.unshift(data);
+        },
+        end: function (data) {
+            s1.end(data);
+            s2.end(data);
+        },
+        pipe1: function (stream) {
+            s1.pipe(stream);
+        },
+        pipe2: function (stream) {
+            s2.pipe(stream);
+        }
+    };
+}
 
 
 Stream.executeAsync = function (cb) {
