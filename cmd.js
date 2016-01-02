@@ -1,6 +1,7 @@
 var CMD_MODULE = (function () {
     var programs = {};
     var alias = {};
+    var handlers={};
     var envVariables;
     if (!localStorage.envVariables) {
         envVariables = {};
@@ -137,8 +138,9 @@ var CMD_MODULE = (function () {
                         name: input,
                         keydown: function (event) {
                             if ((event.which == 68 && event.ctrlKey)) {
-                                //Already implemented in the library
-                                // stdin.end();
+                                if(handlers.ctrld){
+                                    handlers.ctrld();
+                                };
                             }
                         }
                     });
@@ -165,9 +167,10 @@ var CMD_MODULE = (function () {
                         var tee=StreamTee();
                         outputstream.pipe(tee);
                         var writestream=Stream();
-                        tee.on1("data",function(x){writestream.write("\n"+x);});
+                        tee.on1("data",function(x){writestream.write(x+"\n");});
                         tee.on1("end",writestream.end);
                         var consolestream=Stream();
+                        handlers.ctrld=function(){writestream.end()};
                         tee.on2("end",consolestream.end);
                         if (fs.appendFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
                             term.echo("This file is locked by another program.");
@@ -181,8 +184,10 @@ var CMD_MODULE = (function () {
                         var tee=StreamTee();
                         outputstream.pipe(tee);
                         var writestream=Stream();
-                        tee.pipe1(writestream);
+                        tee.on1("data",function(x){writestream.write(x+"\n");});
+                        tee.on1("end",writestream.end);
                         var consolestream=Stream();
+                        handlers.ctrld=function(){writestream.end()};
                         tee.on2("end",consolestream.end);
                         if (fs.writeFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
                             term.echo("This file is locked by another program.");

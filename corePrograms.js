@@ -29,6 +29,33 @@ corePrograms.push({
 });
 
 corePrograms.push({
+    name: "cat",
+    alias: [],
+    man: "Shows the content of a file.\n Execute 'cat filename'",
+    entryPoint: function (argv, stdin, stdout, fs, _return, async) {
+        if (argv.length == 2) {
+            var file = fs.readFile(argv[1]);
+            if (file === false) {
+                stdout.write("File " + argv[1] + " does not exist.");
+                _return();
+                return;
+            }
+            if (file === "Locked") {
+                stdout.write("This file is locked by another program.");
+                _return();
+                return;
+            }
+            file.on("data", function (data) { stdout.write(data) });
+            file.on("end", function () { _return() });
+            async();
+        } else {
+            stdout.write("Incorrect number of arguments.");
+            _return();
+        }
+    }
+});
+
+corePrograms.push({
     name: "caesar",
     alias: [],
     man: "Vini, vidi, encodi.\n Must be executed with one argument, 'caesar n' \n It will add n to the unicode code of each character in the input and print it to output.",
@@ -101,7 +128,7 @@ corePrograms.push({
     man: "Shows the content of the current folder.",
     entryPoint: function (argv, stdin, stdout, fs, _return, async) {
         if (argv.length == 1) {
-            fs.getChilds().map(function(x){return x.name;}).forEach(stdout.write);
+            fs.getChilds().map(function (x) { return x.name; }).forEach(stdout.write);
         } else {
             stdout.write("Wrong number of parameters");
         }

@@ -49,10 +49,10 @@ var FS = (function () {
             getData: function () { return data },
             setData: function (data_n) { data = data_n; save(); },
             addData: function (data_n) { data += data_n; save(); },
-            slock: function () { var r=lock.slock();save(); return r; },
-            xlock: function () { var r=lock.xlock(); save();return r; },
-            sunlock: function () { var r=lock.sunlock(); save();return r; },
-            xunlock: function () { var r=lock.xunlock(); save(); return r;}
+            slock: function () { var r = lock.slock(); save(); return r; },
+            xlock: function () { var r = lock.xlock(); save(); return r; },
+            sunlock: function () { var r = lock.sunlock(); save(); return r; },
+            xunlock: function () { var r = lock.xunlock(); save(); return r; }
         };
     }
 
@@ -96,10 +96,10 @@ var FS = (function () {
             getData: function () { return data },
             setData: function (data_n) { data = data_n; save(); },
             addData: function (data_n) { data += data_n; save(); },
-            slock: function () { var r=lock.slock();save(); return r; },
-            xlock: function () { var r=lock.xlock(); save();return r; },
-            sunlock: function () { var r=lock.sunlock(); save();return r; },
-            xunlock: function () { var r=lock.xunlock(); save(); return r;}
+            slock: function () { var r = lock.slock(); save(); return r; },
+            xlock: function () { var r = lock.xlock(); save(); return r; },
+            sunlock: function () { var r = lock.sunlock(); save(); return r; },
+            xunlock: function () { var r = lock.xunlock(); save(); return r; }
         };
     }
 
@@ -183,14 +183,13 @@ var FS = (function () {
             var childs = currentFolder.getChilds();
             childs = childs.filter(function (c) { return c.name == name; });
             if (childs.length != 0) {
-                Stream.executeAsync(function () {
-                    var file = getItemId(childs[0].id);
-                    if (file.slock()) {
+                var file = getItemId(childs[0].id);
+                if (file.slock()) {
 
-                    } else {
-                        stream="Locked";
-                        return;
-                    }
+                } else {
+                    return "Locked";
+                }
+                Stream.executeAsync(function () {
                     var chunks = file.getData().split("\n").map(function (x) { return x + "\n" });
                     if (chunks[chunks.length - 1] == "\n") {
                         chunks.pop();//To avoid creating a new empty line
