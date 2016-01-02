@@ -48,7 +48,7 @@ corePrograms.push({
 corePrograms.push({
     name: "cat",
     alias: [],
-    man: "Shows the content of a file.\n Execute 'cat filename'",
+    man: "Shows the content of a file.\n Execute 'cat <filename>'",
     entryPoint: function (argv, stdin, stdout, fs, _return, async) {
         if (argv.length == 2) {
             var file = fs.readFile(argv[1]);
@@ -75,7 +75,7 @@ corePrograms.push({
 corePrograms.push({
     name: "caesar",
     alias: [],
-    man: "Vini, vidi, encodi.\n Must be executed with one argument, 'caesar n' \n It will add n to the unicode code of each character in the input and print it to output.",
+    man: "Vini, vidi, encodi.\n Must be executed with one argument, 'caesar <n>' \n It will add n to the unicode code of each character in the input and print it to output.",
     entryPoint: function (argv, stdin, stdout, fs, _return, async) {
         if (argv.length != 2) {
             _return();
@@ -191,5 +191,32 @@ corePrograms.push({
             stdout.write("Wrong number of parameters");
         }
         _return();
+    }
+});
+
+corePrograms.push({
+    name: "wget",
+    alias: [],
+    man: "Retrieves content from the web.\n Execute 'curl <url>'",
+    entryPoint: function (argv, stdin, stdout, fs, _return, async) {
+        if (argv.length == 2) {
+            var xhr = XMLHttpRequest();
+            xhr.onload = function () {
+                if (this.status == 200) {
+                    stdout.write(this.responseText);
+                    _return();
+                } else {
+                    stdout.write("Error " + this.status);
+                    stdout.write(this.responseText);
+                    _return();
+                }
+            }
+            xhr.open("GET", argv[1]);
+            xhr.send();
+            async();
+        } else {
+            stdout.write("Wrong number of parameters");
+            _return();
+        }
     }
 });
