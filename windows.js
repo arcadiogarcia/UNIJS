@@ -41,8 +41,8 @@ var WM = function () {
             offsety = e.clientY - rect.top;
             dragging = true;
             if (w.state == "snip") {
-                offsetx=20;
-                w.state="float";
+                offsetx = 20;
+                w.state = "float";
                 w.div.style.left = e.clientX - offsetx + "px";
                 w.div.style.top = e.clientY - offsety + "px";
                 w.div.style.width = w.lastFloat.width;
@@ -208,85 +208,119 @@ var WM = function () {
         w.div.appendChild(w.textBox);
         active = w;
         windows.push(w);
-        var cmdhandler={cd:function(){return "/"}};
+        var cmdhandler = { cd: function () { return "/" } };
         jQuery(function ($, undefined) {
-            $('#term' + w.id).terminal(CMD.open().bind(this,cmdhandler,w,WM), {
-                    greetings: 'UNIJS',
-                    name: 'js_demo',
-                    height: 200,
-                    prompt: function(callback){
-                        callback(cmdhandler.cd()+" > ");
-                    },
-                    exit:false,
-                    keydown: function (event) {
-                        if ((event.which == 9 && event.ctrlKey)) {
-                            event.preventDefault();
-                            var top = windows[(windows.indexOf(active) + 1) % windows.length];
-                            moveForeground(top);
-                            active = top;
-                            top.div.classList.remove("gotop");
-                            top.div.offsetWidth = top.div.offsetWidth;//Trigger a reflow, necessary for the animation
-                            top.div.classList.add("gotop");
-                            return false;
-                        }
-                        if ((event.which == 84 && event.ctrlKey)) {
-                            var rect = active.div.getBoundingClientRect();
-                            WM.Window(rect.left + 50, rect.top + 50);
-                            return false;
-                        }
-                        if ((event.which == 37 && event.ctrlKey)) {
-                            snip("left");
-                            event.preventDefault();
-                            return false;
-                        }
-                        if ((event.which == 38 && event.ctrlKey)) {
-                            if (w.state == "maximized") {
-                                snip("top");
-                                event.preventDefault();
-                                return false;
-                            } else {
-                                if (w.state == "float") {
-                                    w.lastFloat = {
-                                        top: active.div.style.top,
-                                        left: active.div.style.left,
-                                        width: active.div.style.width,
-                                        height: active.div.style.height
-                                    };
-                                }
-                                w.state = "maximized";
-                                event.preventDefault();
-                                event.preventDefault();
-                                active.div.style.top = "0px";
-                                active.div.style.left = "0px";
-                                active.div.style.width = "calc( 100% - 2px )";
-                                active.div.style.height = "calc( 100% - 2px )";
-                                return false;
-                            }
-
-                        }
-                        if ((event.which == 39 && event.ctrlKey)) {
-                            snip("right");
-                            event.preventDefault();
-                            return false;
-                        }
-                        if ((event.which == 40 && event.ctrlKey)) {
-                            if (w.state == "float") {
-                                snip("bottom");
-                                event.preventDefault();
-                                return false;
-                            }
-                            w.state = "float";
-                            event.preventDefault();
-                            active.div.style.top = w.lastFloat.top;
-                            active.div.style.left = w.lastFloat.left;
-                            active.div.style.width = w.lastFloat.width;
-                            active.div.style.height = w.lastFloat.height;
-                            return false;
-                        }
+            $('#term' + w.id).terminal(CMD.open().bind(this, cmdhandler, w, WM), {
+                greetings: 'UNIJS',
+                name: 'js_demo',
+                height: 200,
+                prompt: function (callback) {
+                    callback(cmdhandler.cd() + " > ");
+                },
+                exit: false,
+                keydown: function (event) {
+                    if ((event.which == 9 && event.ctrlKey)) {
+                        event.preventDefault();
+                        var top = windows[(windows.indexOf(active) + 1) % windows.length];
+                        moveForeground(top);
+                        active = top;
+                        top.div.classList.remove("gotop");
+                        top.div.offsetWidth = top.div.offsetWidth;//Trigger a reflow, necessary for the animation
+                        top.div.classList.add("gotop");
+                        return false;
                     }
-                });
+                    if ((event.which == 84 && event.ctrlKey)) {
+                        var rect = active.div.getBoundingClientRect();
+                        WM.Window(rect.left + 50, rect.top + 50);
+                        return false;
+                    }
+                    if ((event.which == 37 && event.ctrlKey)) {
+                        snip("left");
+                        event.preventDefault();
+                        return false;
+                    }
+                    if ((event.which == 38 && event.ctrlKey)) {
+                        if (w.state == "maximized") {
+                            snip("top");
+                            event.preventDefault();
+                            return false;
+                        } else {
+                            if (w.state == "float") {
+                                w.lastFloat = {
+                                    top: active.div.style.top,
+                                    left: active.div.style.left,
+                                    width: active.div.style.width,
+                                    height: active.div.style.height
+                                };
+                            }
+                            w.state = "maximized";
+                            event.preventDefault();
+                            event.preventDefault();
+                            active.div.style.top = "0px";
+                            active.div.style.left = "0px";
+                            active.div.style.width = "calc( 100% - 2px )";
+                            active.div.style.height = "calc( 100% - 2px )";
+                            return false;
+                        }
+
+                    }
+                    if ((event.which == 39 && event.ctrlKey)) {
+                        snip("right");
+                        event.preventDefault();
+                        return false;
+                    }
+                    if ((event.which == 40 && event.ctrlKey)) {
+                        if (w.state == "float") {
+                            snip("bottom");
+                            event.preventDefault();
+                            return false;
+                        }
+                        w.state = "float";
+                        event.preventDefault();
+                        active.div.style.top = w.lastFloat.top;
+                        active.div.style.left = w.lastFloat.left;
+                        active.div.style.width = w.lastFloat.width;
+                        active.div.style.height = w.lastFloat.height;
+                        return false;
+                    }
+                }
+            });
         });
         w.textBox.className += " textBox";
+        return w.id;
+    };
+
+    WM.GraphicWindow = function (x, y, url, isdata) {
+        if (isdata == undefined) {
+            isdata = false;
+        }
+        var w = {};
+        w.z = getTopZ();
+        w.state = "float";
+        w.id = nextid++;
+        w.div = document.createElement('div');
+        w.div.className = "window";
+        w.div.classList.add("appear");
+        w.div.style["z-index"] = w.z;
+        if (x && y) {
+            w.div.style.left = x + "px";
+            w.div.style.top = y + "px";
+        }
+        w.titlebar = titleBar(w);
+        w.div.appendChild(w.titlebar);
+        document.body.appendChild(w.div);
+        w.textBox = document.createElement('iframe');
+        w.textBox.id = "term" + w.id;
+        w.textBox.className += " textBox";
+        w.div.appendChild(w.textBox);
+        if (isdata) {
+            var iframedoc = w.textBox.contentDocument || w.textBox.contentWindow.document;
+            iframedoc.body.innerHTML = url;
+        } else {
+            w.textBox.src = url;
+        }
+        active = w;
+        windows.push(w);
         return w.id;
     };
 

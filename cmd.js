@@ -71,6 +71,14 @@ var CMD_MODULE = (function () {
                 var rect = w.div.getBoundingClientRect();
                 manager.Window(rect.left + 50, rect.top + 50);
                 break;
+            case "browser":
+                if (argc != 2) {
+                    stdout.write("Wrong number of variables");
+                } else {
+                    var rect = w.div.getBoundingClientRect();
+                    manager.GraphicWindow(rect.left + 50, rect.top + 50,argv[1]);
+                }
+                break;
             case "set":
                 if (argc != 3) {
                     stdout.write("Incorrect number of parameters.");
