@@ -29,6 +29,23 @@ corePrograms.push({
 });
 
 corePrograms.push({
+    name: "js",
+    alias: [],
+    man: "Executes JavaScript code.\nExecute with no arguments to get a JS command line.\nYou can also execute js followed by the code.",
+    entryPoint: function (argv, stdin, stdout, fs, _return, async) {
+        if (argv.length > 1) {
+            argv.shift();
+            stdout.write(eval(argv.join(" ")));
+            _return();
+        } else {
+            stdin.on("data", function (data) { stdout.write(eval(data)) });
+            stdin.on("end", function () { _return() });
+            async();
+        }
+    }
+});
+
+corePrograms.push({
     name: "cat",
     alias: [],
     man: "Shows the content of a file.\n Execute 'cat filename'",
