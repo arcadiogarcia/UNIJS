@@ -1,7 +1,19 @@
 var CMD_MODULE = (function () {
+    var textColor = "#FFF";
+    var stdoutColor = "#CCC";
+
+    function defaultColor(s) {
+        return "[[;" + textColor + ";]" + s + "]";
+    }
+
+    function outputColor(s) {
+        return "[[;" + stdoutColor + ";]" + s + "]";
+    }
+
+
     var programs = {};
     var alias = {};
-    var handlers={};
+    var handlers = {};
     var envVariables;
     if (!localStorage.envVariables) {
         envVariables = {};
@@ -24,6 +36,16 @@ var CMD_MODULE = (function () {
             case "accentColor":
                 var stylesheet = document.styleSheets[0];
                 stylesheet.cssRules[2].style.backgroundColor = value;
+                break;
+            case "backgroundColor":
+                var stylesheet = document.styleSheets[2];
+                stylesheet.cssRules[0].style.backgroundColor = value;
+                break;
+            case "textColor":
+                textColor = value;
+                break;
+            case "stdoutColor":
+                stdoutColor = value;
                 break;
         }
     }
@@ -138,7 +160,7 @@ var CMD_MODULE = (function () {
                         name: input,
                         keydown: function (event) {
                             if ((event.which == 68 && event.ctrlKey)) {
-                                if(handlers.ctrld){
+                                if (handlers.ctrld) {
                                     handlers.ctrld();
                                 };
                             }
@@ -151,12 +173,12 @@ var CMD_MODULE = (function () {
                         subcommands = command.split("<");
                         var file = fs.readFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0]);
                         if (file === false) {
-                            term.echo("File " + subcommands[1] + " does not exist.");
+                            term.echo(defaultColor("File " + subcommands[1] + " does not exist."));
                             term.pop();
                             return;
                         }
                         if (file === "Locked") {
-                            term.echo("This file is locked by another program.");
+                            term.echo(defaultColor("This file is locked by another program."));
                             term.pop();
                             return;
                         }
@@ -164,14 +186,14 @@ var CMD_MODULE = (function () {
                     } else if (command.indexOf(">>") != -1) {
                         subcommands = command.split(">>");
                         var outputstream = executeCommand(subcommands[0], currentStream, w, term, fs);
-                        var tee=StreamTee();
+                        var tee = StreamTee();
                         outputstream.pipe(tee);
-                        var writestream=Stream();
-                        tee.on1("data",function(x){writestream.write(x+"\n");});
-                        tee.on1("end",writestream.end);
-                        var consolestream=Stream();
-                        handlers.ctrld=function(){writestream.end()};
-                        tee.on2("end",consolestream.end);
+                        var writestream = Stream();
+                        tee.on1("data", function (x) { writestream.write(x + "\n"); });
+                        tee.on1("end", writestream.end);
+                        var consolestream = Stream();
+                        handlers.ctrld = function () { writestream.end() };
+                        tee.on2("end", consolestream.end);
                         if (fs.appendFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
                             term.echo("This file is locked by another program.");
                             term.pop();
@@ -181,16 +203,16 @@ var CMD_MODULE = (function () {
                     } else if (command.indexOf(">") != -1) {
                         subcommands = command.split(">");
                         var outputstream = executeCommand(subcommands[0], currentStream, w, term, fs);
-                        var tee=StreamTee();
+                        var tee = StreamTee();
                         outputstream.pipe(tee);
-                        var writestream=Stream();
-                        tee.on1("data",function(x){writestream.write(x+"\n");});
-                        tee.on1("end",writestream.end);
-                        var consolestream=Stream();
-                        handlers.ctrld=function(){writestream.end()};
-                        tee.on2("end",consolestream.end);
+                        var writestream = Stream();
+                        tee.on1("data", function (x) { writestream.write(x + "\n"); });
+                        tee.on1("end", writestream.end);
+                        var consolestream = Stream();
+                        handlers.ctrld = function () { writestream.end() };
+                        tee.on2("end", consolestream.end);
                         if (fs.writeFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
-                            term.echo("This file is locked by another program.");
+                            term.echo(defaultColor("This file is locked by another program."));
                             term.pop();
                             return;
                         }
@@ -200,7 +222,7 @@ var CMD_MODULE = (function () {
                     }
                 }
                 currentStream.on("data", function (x) {
-                    term.echo(x);
+                    term.echo(outputColor(x));
                 });
                 currentStream.on("end", function (x) {
                     term.pop();

@@ -26,6 +26,15 @@
  *
  * Date: Sat, 12 Dec 2015 18:51:06 +0000
  */
+ .terminal, .cmd {
+    font-family: monospace;
+    /*font-family: FreeMono, monospace; this don't work on Android */
+    color: #aaa;
+    background-color: #000;
+    font-size: 12px;
+    line-height: 14px;
+}
+ 
 .terminal .terminal-output .format, .cmd .format,
 .cmd .prompt, .cmd .prompt div, .terminal .terminal-output div div{
     display: inline-block;
@@ -151,14 +160,7 @@
 .cmd .prompt {
     float: left;
 }
-.terminal, .cmd {
-    font-family: monospace;
-    /*font-family: FreeMono, monospace; this don't work on Android */
-    color: #aaa;
-    background-color: #000;
-    font-size: 12px;
-    line-height: 14px;
-}
+
 .terminal-output > div {
     /*padding-top: 3px;*/
     min-height: 14px;
