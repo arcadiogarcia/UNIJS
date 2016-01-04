@@ -18,7 +18,7 @@ Nope, sorry. The journey has just started and this is what is done:
   - Some basic programs (cat, echo, ls, tree, mkdir, wget, caesar...)
   - File System API
     - Locks ( slock on read, xlock on write, unlock on close)
-  -Basic manual (man command)
+  - Basic manual (man command)
   
 And this is still missing:
   - Interchangeable OS modules (file system, sensors data, notifications, whatever...)
