@@ -16,9 +16,6 @@
     <header>
       <div class="container">
         <h1>UNIJS</h1>
-        
-        <h2><a href="demo/index.html">See a demo</a></h2>
-        
         <h2>A web-based windowed console environment</h2>
 
         <section id="downloads">
@@ -35,6 +32,10 @@
 <a id="unijs" class="anchor" href="#unijs" aria-hidden="true"><span class="octicon octicon-link"></span></a>UNIJS</h1>
 
 <p>(JS must be pronounced similarly to X for maximum pun effect)</p>
+
+<h2>
+<a id="try-it" class="anchor" href="#try-it" aria-hidden="true"><span class="octicon octicon-link"></span></a><a href="demo/index.html">Try it!</a>
+</h2>
 
 <h3>
 <a id="unijs-is-a-web-based-windowed-console-environment" class="anchor" href="#unijs-is-a-web-based-windowed-console-environment" aria-hidden="true"><span class="octicon octicon-link"></span></a>UNIJS is a web-based windowed console environment.</h3>
@@ -56,22 +57,25 @@
 
 <ul>
 <li>Window creation, deletion, resizing, movement, snip, keyboard shortcuts</li>
-<li>Customization using environment variables</li>
+<li>Customization using environment variables (terminal colors, window color, wallpaper)</li>
 </ul>
 </li>
-<li>Basic program loader</li>
-<li>Basic stream implementation</li>
-<li>Some basic programs (echo, ls, tree, caesar...)</li>
-<li>Folder system implementation</li>
+<li>Program loader (not from the "inner" filesystem yet)</li>
+<li>Stream implementation: pipes and redirects</li>
+<li>Some basic programs (cat, echo, ls, tree, mkdir, wget, caesar...)</li>
+<li>File System API
+
+<ul>
+<li>Locks ( slock on read, xlock on write, unlock on close)
+-Basic manual (man command)</li>
+</ul>
+</li>
 </ul>
 
 <p>And this is still missing:</p>
 
 <ul>
-<li>Full set of basic utilites (cat, grep...)</li>
-<li>File system API</li>
 <li>Interchangeable OS modules (file system, sensors data, notifications, whatever...)</li>
-<li>Fully featured man pages</li>
 <li>Everything else</li>
 </ul>
 
