@@ -12,17 +12,16 @@ Nope, sorry. The journey has just started and this is what is done:
 
   - Basic windows environment
     - Window creation, deletion, resizing, movement, snip, keyboard shortcuts
-    - Customization using environment variables
-  - Basic program loader
-  - Basic stream implementation
-  - Some basic programs (echo, ls, tree, caesar...)
-  - Folder system implementation
+    - Customization using environment variables (terminal colors, window color, wallpaper)
+  - Program loader (not from the "inner" filesystem yet)
+  - Stream implementation: pipes and redirects
+  - Some basic programs (cat, echo, ls, tree, mkdir, wget, caesar...)
+  - File System API
+    - Locks ( slock on read, xlock on write, unlock on close)
+  -Basic manual (man command)
   
 And this is still missing:
-  - Full set of basic utilites (cat, grep...)
-  - File system API
   - Interchangeable OS modules (file system, sensors data, notifications, whatever...)
-  - Fully featured man pages
   - Everything else
   
 Of course, you are welcome to report issues and submit pull requests!
