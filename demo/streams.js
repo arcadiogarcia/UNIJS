@@ -1,7 +1,7 @@
 var Stream = function () {
     var handlers = {};
     var writeStack = [];
-    var end;
+    var end,ended=false;
     return {
         on: function (action, callback) {
             handlers[action] = callback;
@@ -12,7 +12,7 @@ var Stream = function () {
                     }
                     break;
                 case "end":
-                    if (typeof end !== "undefined") {
+                    if (ended==true) {
                         callback(end);
                     }
                     break;
@@ -27,18 +27,64 @@ var Stream = function () {
                 writeStack.push(data);
             }
         },
-        end: function (data) {
-            if (typeof handlers["end"] === "function") {
-                handlers["end"](data);
+        unshift: function (data) {
+            if (typeof handlers["data"] === "function") {
+                handlers["data"](data);
             } else {
-                if (typeof end !== "undefined") {
+                writeStack.unshift(data);
+            }
+        },
+        end: function (data) {
+            if (ended==false) {
+                ended=true;
+                if (typeof handlers["end"] === "function") {
+                    handlers["end"](data);
+                }else {
                     end = data;
                 }
+                
             }
         },
         pipe: function (stream) {
-            handlers["data"] = stream.write;
-            handlers["end"] = stream.end;
+            this.on("data",stream.write);
+            this.on("end",stream.end);
         }
     };
 };
+
+
+var StreamTee=function(){
+    var s1=Stream();
+    var s2=Stream();
+     return {
+        on1: function (action, callback) {
+            s1.on(action,callback);
+        },
+        on2: function (action, callback) {
+            s2.on(action,callback);
+        },
+        write: function (data) {
+            s1.write(data);
+            s2.write(data);
+        },
+        unshift: function (data) {
+            s1.unshift(data);
+            s2.unshift(data);
+        },
+        end: function (data) {
+            s1.end(data);
+            s2.end(data);
+        },
+        pipe1: function (stream) {
+            s1.pipe(stream);
+        },
+        pipe2: function (stream) {
+            s2.pipe(stream);
+        }
+    };
+}
+
+
+Stream.executeAsync = function (cb) {
+    window.setTimeout(cb, 0);
+}
