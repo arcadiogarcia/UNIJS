@@ -96,23 +96,8 @@ corePrograms.push({
         if (argv.length == 1) {
             stdout.write(fs.getCurrentPath());
         } else if (argv.length == 2) {
-            var folders = argv[1].split("/").filter(function (x) { return x != ""; });
-            for (var i = 0; i < folders.length; i++) {
-                if (folders[i] != "..") {
-                    if (fs.navigateChild(folders[i])) {
-
-                    } else {
-                        stdout.write("Folder " + folders[i] + " is not a child of " + fs.getCurrentFolder());
-                        break;
-                    }
-                } else {
-                    if (fs.navigateUp()) {
-
-                    } else {
-                        stdout.write("You are already in the root folder");
-                        break;
-                    }
-                }
+            if (!fs.navigatePath(argv[1])) {
+                stdout.write("The path is invalid or does not exist.");
             }
         } else {
             stdout.write("Wrong number of parameters");
@@ -218,5 +203,27 @@ corePrograms.push({
             stdout.write("Wrong number of parameters");
             _return();
         }
+    }
+});
+
+corePrograms.push({
+    name: "tutorial",
+    alias: [],
+    man: "Teaches the basics of UNIJS",
+    entryPoint: function (argv, stdin, stdout, fs, _return, async) {
+        var file = fs.readFile("ada");
+        if (file === false) {
+            stdout.write("File " + argv[1] + " does not exist.");
+            _return();
+            return;
+        }
+        if (file === "Locked") {
+            stdout.write("This file is locked by another program.");
+            _return();
+            return;
+        }
+        file.on("data", function (data) { stdout.write(data) });
+        file.on("end", function () { _return() });
+        async();
     }
 });
