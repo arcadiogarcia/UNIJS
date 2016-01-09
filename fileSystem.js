@@ -38,7 +38,6 @@ var FS = (function () {
 
         function save() {
             localStorage[id] = JSON.stringify({ name: name, id: id, type: "file", lock: lock.toString(), data: data });
-            console.log(localStorage[id]);
         }
         save();
 
@@ -46,7 +45,7 @@ var FS = (function () {
             getId: function () { return id },
             getType: function () { return "file" },
             getName: function () { return name },
-            getData: function () { return data },
+            getData: function () { return data.toString(); },
             setData: function (data_n) { data = data_n; save(); },
             addData: function (data_n) { data += data_n; save(); },
             slock: function () { var r = lock.slock(); save(); return r; },
@@ -93,7 +92,7 @@ var FS = (function () {
             getId: function () { return id },
             getType: function () { return "file" },
             getName: function () { return name },
-            getData: function () { return data },
+            getData: function () { return data.toString() },
             setData: function (data_n) { data = data_n; save(); },
             addData: function (data_n) { data += data_n; save(); },
             slock: function () { var r = lock.slock(); save(); return r; },
@@ -127,7 +126,6 @@ var FS = (function () {
 
     currentFolder = getItemId(0);
     function navigateUp() {
-        console.log(currentFolder.getParent());
         if (currentFolder.getParent() != null) {
             currentFolder = getItemId(currentFolder.getParent());
             return true;
