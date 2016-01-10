@@ -2,7 +2,11 @@ var FS = (function () {
     if (!localStorage.nextId) {
         localStorage.nextId = 0;
     }
-    var nextId = localStorage.nextId;
+    var nextId = +localStorage.nextId;
+
+    function deleteItem(id) {
+        localStorage.removeItem(id);
+    }
 
     function getNextId() {
         localStorage.nextId = nextId + 1;
@@ -26,7 +30,8 @@ var FS = (function () {
             getName: function () { return name },
             getChilds: function () { return childs },
             getParent: function () { return parent },
-            addChild: function (c) { childs.push({ id: c.getId(), name: c.getName(), type: c.getType() }); save() }
+            addChild: function (c) { childs.push({ id: c.getId(), name: c.getName(), type: c.getType() }); save() },
+            removeChild: function (name) { childs = childs.filter(function (x) { return x.name != name }); save() }
         };
     }
 
@@ -73,7 +78,8 @@ var FS = (function () {
             getName: function () { return name },
             getChilds: function () { return childs },
             getParent: function () { return parent },
-            addChild: function (c) { childs.push({ id: c.getId(), name: c.getName(), type: c.getType() }); save() }
+            addChild: function (c) { childs.push({ id: c.getId(), name: c.getName(), type: c.getType() }); save() },
+            removeChild: function (name) { childs = childs.filter(function (x) { return x.name != name }); save() }
         };
     }
 
@@ -213,6 +219,23 @@ var FS = (function () {
             childs = childs.filter(function (c) { return c.name == name; });
             if (childs.length == 0) {
                 currentFolder.addChild(File(name, content));
+                return true;
+            }
+            return false;
+        },
+        deleteFile: function (name) {
+            if (name.indexOf("/") != -1) {
+                var oldDir = navigateToParent(name);
+                name = getFileName(name);
+            }
+            var childs = currentFolder.getChilds();
+            if (oldDir != undefined) {
+                navigatePath(oldDir);
+            }
+            childs = childs.filter(function (c) { return c.name == name; });
+            if (childs.length > 0) {
+                childs.forEach(function (x) { deleteItem(x.id); });
+                currentFolder.removeChild(name);
                 return true;
             }
             return false;

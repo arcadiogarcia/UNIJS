@@ -11,6 +11,7 @@
     <script src="streams.js"></script>
     <script src="fileSystem.js"></script>
     <script src="corePrograms.js"></script>
+    <script src="stdlib.js"></script>
     <script src="cmd.js"></script>
     <script src="jquery.js"></script>
     <script src="terminal.js"></script>
@@ -31,7 +32,8 @@
             var boolean = applicationView.tryEnterFullScreenMode();
         }
         var CMD=CMD_MODULE();
-        CMD.register(corePrograms);
+        CMD.registerLibraries(stdlib);
+        CMD.registerPrograms(corePrograms);
 		var manager = WM();
 		manager.Window();
     </script>

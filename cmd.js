@@ -12,6 +12,7 @@ var CMD_MODULE = (function () {
 
 
     var programs = {};
+    var libraries = {};
     var alias = {};
     var handlers = {};
     var envVariables;
@@ -64,7 +65,7 @@ var CMD_MODULE = (function () {
         var argc = argv.length;
         var command = argv[0];
         var returned = 0;
-        var async = function () { returned = -1; };
+        var _background = function () { returned = -1; };
         var _return = function () { returned = 1; stdout.end() };
         switch (command) {
             case "cmd":
@@ -76,7 +77,7 @@ var CMD_MODULE = (function () {
                     stdout.write("Wrong number of variables");
                 } else {
                     var rect = w.div.getBoundingClientRect();
-                    manager.GraphicWindow(rect.left + 50, rect.top + 50,argv[1]);
+                    manager.GraphicWindow(rect.left + 50, rect.top + 50, argv[1]);
                 }
                 break;
             case "set":
@@ -126,7 +127,9 @@ var CMD_MODULE = (function () {
                 break;
             default:
                 if (programs[command]) {
-                    programs[command].entryPoint(argv, stdin, stdout, fs, _return, async);
+                    var async = { return: _return, background: _background };
+                    var include = function (x) { if (x == "fs") { return fs } return libraries[x] };
+                    programs[command].entryPoint(argv, stdin, stdout, include, async);
                 } else {
                     stdout.write("Unknown command \"" + command + "\"");
                 }
@@ -140,16 +143,26 @@ var CMD_MODULE = (function () {
     }
 
     return {
-        register: function (packages) {
+        registerPrograms: function (packages) {
             packages.forEach(function (x) {
                 if (programs[x.name]) {
-                    console.log("El programa " + x.name + " ya esta registrado");
+                    console.log("The program " + x.name + " is already installed");
                     return;
                 }
                 programs[x.name] = x;
                 x.alias.forEach(function (y) {
                     alias[y] = x.name;
                 });
+            });
+        },
+        registerLibraries: function (packages) {
+            packages.forEach(function (x) {
+                if (libraries[x.name]) {
+                    console.log("The library " + x.name + " is already installed");
+                    return;
+                }
+                x.dependencies.forEach(function (x) { if (!libraries[x]) { console.log("Error, the required dependency " + x + " is not installed."); return; } });
+                libraries[x.name] = x;
             });
         },
         open: function () {
