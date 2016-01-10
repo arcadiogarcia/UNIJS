@@ -5,7 +5,9 @@ corePrograms.push({
     alias: [],
     man: "This command gives you info about the system.",
     entryPoint: function (argv, stdin, stdout, fs, _return, async) {
-        stdout.end("UNIJS 0.1");
+        stdout.write("UNIJS 0.1");
+        stdout.write("Running on:");
+        stdout.write(navigator.userAgent);
         _return();
     }
 });
@@ -96,23 +98,8 @@ corePrograms.push({
         if (argv.length == 1) {
             stdout.write(fs.getCurrentPath());
         } else if (argv.length == 2) {
-            var folders = argv[1].split("/").filter(function (x) { return x != ""; });
-            for (var i = 0; i < folders.length; i++) {
-                if (folders[i] != "..") {
-                    if (fs.navigateChild(folders[i])) {
-
-                    } else {
-                        stdout.write("Folder " + folders[i] + " is not a child of " + fs.getCurrentFolder());
-                        break;
-                    }
-                } else {
-                    if (fs.navigateUp()) {
-
-                    } else {
-                        stdout.write("You are already in the root folder");
-                        break;
-                    }
-                }
+            if (!fs.navigatePath(argv[1])) {
+                stdout.write("The path is invalid or does not exist.");
             }
         } else {
             stdout.write("Wrong number of parameters");
@@ -217,6 +204,139 @@ corePrograms.push({
         } else {
             stdout.write("Wrong number of parameters");
             _return();
+        }
+    }
+});
+
+corePrograms.push({
+    name: "tutorial",
+    alias: [],
+    man: "Teaches the basics of UNIJS",
+    entryPoint: function (argv, stdin, stdout, fs, _return, async) {
+        var messages={0:[
+                        "Welcome to UNIJS, I will be your guide.",
+            "I will teach you how to use UNIJS, until you become a command line ninja.",
+            "You can progress in this tutorial running 'tutorial next'",
+            "You can read again the last message running 'tutorial'",
+            "And you can go back here running 'tutorial reset'",
+            "Are you ready? Run 'tutorial next' to begin your training."
+        ],
+        1:[
+                        "Nice, you are ready to learn about programs.",
+                        "You can execute programs typing their name in the terminal.",
+                        "For example, 'info' will give you information about the system"
+        ],
+        2:[
+                        "Some programs also accept several parameters after their name",
+                        "For example, executing 'echo Hello World' will print Hello World",
+                        "(Executing 'echo' without parameters will keep printing everything you type until you press Ctrl+D)",
+        ],
+        3:[
+                        "Now check out the 'caesar' program",
+                        "It implements the caesar encryption algorithm, it simply replaces every character with the one found <n> positions later in the Unicode table.",
+                        "Try executing 'caesar <n>', it will print everything you type encoded.",
+                        "(Remember Ctrl+D will close the program)"
+        ],
+        4:[
+                        "Now that you know how to use programs, the next step is to combine them to be able to do even more things.",
+                        "For example, lets say you want to send the information about your system to a friend, but you want to send it encoded so no one will be able to read it.",
+                        "You have two programs that solve different parts of the problem, so why not combine them?",
+                        "The pipe operand ( | ) allows you to do that, redirect the output of a program as the input of the next one.",
+                        "You can execute 'info | caesar <n>' to get the information encoded.",
+                        
+        ],
+        5:[
+                        "Neat, right?",
+                        "Another example you can try is this one",
+                        "'caesar 5 | caesar -5'",
+                        "It will print the same text you type in, why?",
+                        "The first command will encrypt the text, but the next one will desencrypt it.",
+                        
+        ],
+        6:[
+                        "Now let's see what we have in the filesystem.",
+                        "As you can see in the prompt, you are in the "+fs.getCurrentPath()+" folder",
+                        "At the top of the filesystem ther is a root (/) folder, and it can contain folders, that can contain folders, that can contain folders... you get the idea. And of course, you can place your files on any folder.",
+                        "You can inspect your current folder with the 'ls' command"
+        ],
+        7:[
+                        "We should try to create a file!",
+                        "You can redirect the console output to a file using >",
+                        "For example, 'echo 1234 > a.txt'",
+                        "You can also use >> when you want to append to the current file, instead of overwriting it."
+        ],
+        8:[
+                        "Nice! Now you can use < to use a file as the input for a command.",
+                        "For example, 'caesar 1 < a.txt' should encode the file you just created.",
+        ],
+        9:[
+                        "Of course, folders are not enough",
+                        "You can also create folders using 'mkdir'",
+                        "For example 'mkdir documents'"
+        ],
+        10:[
+                        "Now, you can use 'cd' to navigate to the directory you just created.",
+                        "You can use 'cd name' to navigate to a child of the current folder.",
+                        "You can also use 'cd path' to navigate to the current path."
+        ],
+        11:[
+                        "Finally, try creating a file in the subfolder.",
+                        "Then, execute 'cd ..' to go back to the parent folder.",
+                        "And execute 'tree' to see the folder structure in a fancy way."
+        ],
+        12:[
+                        "One command that is always hand is 'man':",
+                        "Executing 'man' will give you a list of the installed programs.",
+                        "Executing 'man name' will give you detailed information about that program."
+        ],
+        13:[
+                        "Thats all for now! You already know how to use UNIJS, the only question now is:",
+                        "What do you want to do now?"
+        ]};
+        function printMessageSlow(id) {
+            var counter=0;
+            var message=messages[id];
+            setInterval(function(){
+                if(counter<message.length){
+                    stdout.write(message[counter++]);
+                }else{
+                     _return()
+                }
+            },600);
+            async();
+        }
+
+
+        var file = fs.readFile("/etc/tutorial/state.data");
+        if (file === "Locked") {
+            stdout.write("Error, maybe there is another instance of this program running?");
+            _return();
+            return;
+        }
+        if (file === false) {
+            fs.createFile("/etc/tutorial/state.data", 0);
+            printMessageSlow(0);
+        }else{
+            var content="";
+            file.on("data",function(x){
+                content+=x;
+            });
+            file.on("end",function(x){
+                if(argv.length==2){
+                    if(argv[1]=="next"){
+                        content = +(content)+1;
+                    }
+                    if(argv[1]=="reset"){
+                        content = 0;
+                    }
+                    var wStream=Stream();
+                    fs.writeFile("/etc/tutorial/state.data", wStream);
+                    wStream.write(content);
+                    wStream.end();
+                }         
+                printMessageSlow(+content);//Cast file content to a number
+            });
+            async();
         }
     }
 });

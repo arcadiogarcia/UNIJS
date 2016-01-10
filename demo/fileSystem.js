@@ -38,7 +38,6 @@ var FS = (function () {
 
         function save() {
             localStorage[id] = JSON.stringify({ name: name, id: id, type: "file", lock: lock.toString(), data: data });
-            console.log(localStorage[id]);
         }
         save();
 
@@ -46,7 +45,7 @@ var FS = (function () {
             getId: function () { return id },
             getType: function () { return "file" },
             getName: function () { return name },
-            getData: function () { return data },
+            getData: function () { return data.toString(); },
             setData: function (data_n) { data = data_n; save(); },
             addData: function (data_n) { data += data_n; save(); },
             slock: function () { var r = lock.slock(); save(); return r; },
@@ -93,7 +92,7 @@ var FS = (function () {
             getId: function () { return id },
             getType: function () { return "file" },
             getName: function () { return name },
-            getData: function () { return data },
+            getData: function () { return data.toString() },
             setData: function (data_n) { data = data_n; save(); },
             addData: function (data_n) { data += data_n; save(); },
             slock: function () { var r = lock.slock(); save(); return r; },
@@ -126,6 +125,61 @@ var FS = (function () {
     }
 
     currentFolder = getItemId(0);
+    function navigateUp() {
+        if (currentFolder.getParent() != null) {
+            currentFolder = getItemId(currentFolder.getParent());
+            return true;
+        }
+        return false;
+    }
+    function navigateChild(name) {
+        var childs = currentFolder.getChilds();
+        childs = childs.filter(function (c) { return c.name == name; });
+        if (childs.length == 0) {
+            return false;
+        }
+        currentFolder = getItemId(childs[0].id);
+        return true;
+    }
+
+    function navigatePath(path) {
+        if (path[0] == "/") {
+            while (navigateUp()); //Go to the root
+        }
+        var childs = path.split("/").filter(function (x) { return x != "" });
+        for (var i = 0; i < childs.length; i++) {
+            if (childs[i] == "..") {
+                if (!navigateUp()) {
+                    return false;
+                }
+            } else if (!navigateChild(childs[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function getCurrentPath() {
+        var path = "/";
+        var cd = currentFolder;
+        while (cd && cd.getParent() != null) {
+            path = "/" + cd.getName() + path;
+            cd = getItemId(cd.getParent());
+        }
+        return path;
+    }
+
+    function navigateToParent(path) {
+        var parentPath = path.split("/").slice(0, -1).join("/");
+        name = path.split("/").splice(-1, 1)[0];
+        var cd = getCurrentPath();
+        navigatePath(parentPath);
+        return cd;
+    }
+
+    function getFileName(path) {
+        return path.split("/").splice(-1, 1)[0];
+    }
 
     return {
         getChilds: function () {
@@ -134,32 +188,10 @@ var FS = (function () {
         getCurrentFolder: function () {
             return currentFolder.getName();
         },
-        getCurrentPath: function () {
-            var path = "/";
-            var cd = currentFolder;
-            while (cd && cd.getParent() != null) {
-                path = "/" + cd.getName() + path;
-                cd = getItemId(cd.getParent());
-            }
-            return path;
-        },
-        navigateUp: function () {
-            console.log(currentFolder.getParent());
-            if (currentFolder.getParent() != null) {
-                currentFolder = getItemId(currentFolder.getParent());
-                return true;
-            }
-            return false;
-        },
-        navigateChild: function (name) {
-            var childs = currentFolder.getChilds();
-            childs = childs.filter(function (c) { return c.name == name; });
-            if (childs.length == 0) {
-                return false;
-            }
-            currentFolder = getItemId(childs[0].id);
-            return true;
-        },
+        getCurrentPath: getCurrentPath,
+        navigateUp: navigateUp,
+        navigateChild: navigateChild,
+        navigatePath: navigatePath,
         createFolder: function (name) {
             var childs = currentFolder.getChilds();
             childs = childs.filter(function (c) { return c.name == name; });
@@ -170,7 +202,14 @@ var FS = (function () {
             return false;
         },
         createFile: function (name, content) {
+            if (name.indexOf("/") != -1) {
+                var oldDir = navigateToParent(name);
+                name = getFileName(name);
+            }
             var childs = currentFolder.getChilds();
+            if (oldDir != undefined) {
+                navigatePath(oldDir);
+            }
             childs = childs.filter(function (c) { return c.name == name; });
             if (childs.length == 0) {
                 currentFolder.addChild(File(name, content));
@@ -179,9 +218,16 @@ var FS = (function () {
             return false;
         },
         readFile: function (name) {
+            if (name.indexOf("/") != -1) {
+                var oldDir = navigateToParent(name);
+                name = getFileName(name);
+            }
             var stream = Stream();
             var childs = currentFolder.getChilds();
             childs = childs.filter(function (c) { return c.name == name; });
+            if (oldDir != undefined) {
+                navigatePath(oldDir);
+            }
             if (childs.length != 0) {
                 var file = getItemId(childs[0].id);
                 if (file.slock()) {
@@ -203,6 +249,10 @@ var FS = (function () {
             return false;
         },
         writeFile: function (name, stream) {
+            if (name.indexOf("/") != -1) {
+                var oldDir = navigateToParent(name);
+                name = getFileName(name);
+            }
             var childs = currentFolder.getChilds();
             childs = childs.filter(function (c) { return c.name == name; });
             var file;
@@ -211,6 +261,9 @@ var FS = (function () {
             } else {
                 file = File(name, "");
                 currentFolder.addChild(file);
+            }
+            if (oldDir != undefined) {
+                navigatePath(oldDir);
             }
             if (file.xlock()) {
 
@@ -227,6 +280,10 @@ var FS = (function () {
             return true;
         },
         appendFile: function (name, stream) {
+            if (name.indexOf("/") != -1) {
+                var oldDir = navigateToParent(name);
+                name = getFileName(name);
+            }
             var childs = currentFolder.getChilds();
             childs = childs.filter(function (c) { return c.name == name; });
             var file;
@@ -235,6 +292,9 @@ var FS = (function () {
             } else {
                 file = File(name, "");
                 currentFolder.addChild(file);
+            }
+            if (oldDir != undefined) {
+                navigatePath(oldDir);
             }
             if (file.xlock()) {
 
