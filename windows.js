@@ -290,7 +290,7 @@ var WM = function () {
         return w.id;
     };
 
-    WM.GraphicWindow = function (x, y, url, isdata) {
+    WM.GraphicWindow = function (x, y, url, isdata, globalvars) {
         if (isdata == undefined) {
             isdata = false;
         }
@@ -314,8 +314,11 @@ var WM = function () {
         w.textBox.className += " textBox";
         w.div.appendChild(w.textBox);
         if (isdata) {
-            var iframedoc = w.textBox.contentDocument || w.textBox.contentWindow.document;
-            iframedoc.body.innerHTML = url;
+            var iframewindow = w.textBox.contentWindow;
+            for (var key in globalvars) {
+                iframewindow[key] = globalvars[key];
+            }
+            iframewindow.document.write(url);
         } else {
             w.textBox.src = url;
         }

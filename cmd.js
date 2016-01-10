@@ -80,6 +80,10 @@ var CMD_MODULE = (function () {
                     manager.GraphicWindow(rect.left + 50, rect.top + 50, argv[1]);
                 }
                 break;
+            case "ace":
+                var rect = w.div.getBoundingClientRect();
+                manager.GraphicWindow(rect.left + 50, rect.top + 50, ' <div id="editor" style="position:absolute;top:0;left:0;width:100%;height:100%;margin:0px;">some text</div><script src="https://raw.githubusercontent.com/ajaxorg/ace-builds/master/src/ace.js" type="text/javascript" charset="utf-8"></script><script>var editor = ace.edit("editor");</script>',true,{fs:fs});
+                break;
             case "set":
                 if (argc != 3) {
                     stdout.write("Incorrect number of parameters.");
@@ -128,7 +132,7 @@ var CMD_MODULE = (function () {
             default:
                 if (programs[command]) {
                     var async = { return: _return, background: _background };
-                    var include = function (x) { if (x == "fs") { return fs } return libraries[x] };
+                    var include = function (x) { if (x == "fs") { return fs } return libraries[x].content };
                     programs[command].entryPoint(argv, stdin, stdout, include, async);
                 } else {
                     stdout.write("Unknown command \"" + command + "\"");
