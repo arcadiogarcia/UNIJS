@@ -284,12 +284,12 @@ corePrograms.push({
                         "Then, execute 'cd ..' to go back to the parent folder.",
                         "And execute 'tree' to see the folder structure in a fancy way."
         ],
-        11:[
+        12:[
                         "One command that is always hand is 'man':",
                         "Executing 'man' will give you a list of the installed programs.",
                         "Executing 'man name' will give you detailed information about that program."
         ],
-        12:[
+        13:[
                         "Thats all for now! You already know how to use UNIJS, the only question now is:",
                         "What do you want to do now?"
         ]};
