@@ -36,10 +36,9 @@ corePrograms.push({
         if (argv.length > 1) {
             argv.shift();
             stdout.write(eval(argv.join(" ")));
-            async.background();
         } else {
             stdin.on("data", function (data) { stdout.write(eval(data)) });
-            stdin.on("end", function () { async.background() });
+            stdin.on("end", function () { async.return() });
             async.background();
         }
     }
@@ -55,20 +54,17 @@ corePrograms.push({
             var file = fs.readFile(argv[1]);
             if (file === false) {
                 stdout.write("File " + argv[1] + " does not exist.");
-                async.background();
                 return;
             }
             if (file === "Locked") {
                 stdout.write("This file is locked by another program.");
-                async.background();
                 return;
             }
             file.on("data", function (data) { stdout.write(data) });
-            file.on("end", function () { async.background() });
+            file.on("end", function () { async.return() });
             async.background();
         } else {
             stdout.write("Incorrect number of arguments.");
-            async.background();
         }
     }
 });
@@ -83,7 +79,6 @@ corePrograms.push({
             fs.deleteFile(argv[1]);
         } else {
             stdout.write("Incorrect number of arguments.");
-            async.background();
         }
     }
 });
@@ -94,11 +89,11 @@ corePrograms.push({
     man: "Vini, vidi, encodi.\n Must be executed with one argument, 'caesar <n>' \n It will add n to the unicode code of each character in the input and print it to output.",
     entryPoint: function (argv, stdin, stdout, include, async) {
         if (argv.length != 2) {
-            async.background();
+
         } else {
             var n = parseInt(argv[1]);
             stdin.on("data", function (data) { stdout.write(data.split("").map(function (x) { return String.fromCharCode(x.charCodeAt(0) + n) }).join("")) });
-            stdin.on("end", function () { async.background() });
+            stdin.on("end", function () { async.return() });
             async.background();
         }
     }
@@ -119,7 +114,6 @@ corePrograms.push({
         } else {
             stdout.write("Wrong number of parameters");
         }
-        async.background();
     }
 });
 
@@ -138,7 +132,6 @@ corePrograms.push({
         } else {
             stdout.write("Wrong number of parameters");
         }
-        async.background();
     }
 });
 
@@ -153,7 +146,6 @@ corePrograms.push({
         } else {
             stdout.write("Wrong number of parameters");
         }
-        async.background();
     }
 });
 
@@ -195,7 +187,6 @@ corePrograms.push({
         } else {
             stdout.write("Wrong number of parameters");
         }
-        async.background();
     }
 });
 
@@ -209,11 +200,11 @@ corePrograms.push({
             xhr.onload = function () {
                 if (this.status == 200) {
                     stdout.write(this.responseText);
-                    async.background();
+                    async.return();
                 } else {
                     stdout.write("Error " + this.status);
                     stdout.write(this.responseText);
-                    async.background();
+                    async.return();
                 }
             }
             xhr.open("GET", argv[1]);
@@ -221,7 +212,6 @@ corePrograms.push({
             async.background();
         } else {
             stdout.write("Wrong number of parameters");
-            async.background();
         }
     }
 });
@@ -319,7 +309,7 @@ corePrograms.push({
                 if(counter<message.length){
                     stdout.write(message[counter++]);
                 }else{
-                     async.background()
+                     async.return()
                 }
             },600);
             async.background();
@@ -329,7 +319,6 @@ corePrograms.push({
         var file = fs.readFile("/etc/tutorial/state.data");
         if (file === "Locked") {
             stdout.write("Error, maybe there is another instance of this program running?");
-            async.background();
             return;
         }
         if (file === false) {

@@ -313,11 +313,14 @@ var WM = function () {
         w.textBox.id = "term" + w.id;
         w.textBox.className += " textBox";
         w.div.appendChild(w.textBox);
-        if (isdata) {
-            var iframewindow = w.textBox.contentWindow;
+        var iframewindow = w.textBox.contentWindow;
+        if (globalvars) {
             for (var key in globalvars) {
                 iframewindow[key] = globalvars[key];
             }
+            iframewindow["Stream"] = Stream;
+        }
+        if (isdata) {
             iframewindow.document.write(url);
         } else {
             w.textBox.src = url;

@@ -1,0 +1,71 @@
+<style>
+    #menubar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 40px;
+        margin: 0px;
+        padding: 0px;
+    }
+    
+    #menubar button {
+        margin: 5px;
+        height: 30px;
+    }
+    
+    #editor {
+        position: absolute;
+        top: 40px;
+        left: 0;
+        width: 100%;
+        height: calc( 100% - 40px);
+        margin: 0px;
+    }
+</style>
+<div id="menubar">
+    <button onclick="loadFile(prompt('Write the file that you want to open'))">Open</button>
+    <button onclick="saveFile(prompt('Write the file that you want to save'))">Save</button>
+    <button>Import</button>
+    <button>Export</button>
+</div>
+<div id="editor">some text</div>
+<script src="https://raw.githubusercontent.com/ajaxorg/ace-builds/master/src/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var editor = ace.edit("editor");
+    
+    
+    function loadFile(path){
+        var stream=fs.readFile(path);
+        switch(stream){
+            case false:
+            break;
+            case "Locked":
+            break;
+            default:
+            var content="";
+            stream.on("data", function(x){
+                content+=x;
+            })
+            stream.on("end", function(x){
+                editor.setValue(content,-1);
+            })
+            break;
+        }
+    }
+    
+    function saveFile(path){
+        var content=editor.getValue();
+        var file=fs.createFile(path,content);
+        if(file==false){
+            var overwrite=window.confirm("This file already exists, do you want to overwrite it?");
+            if(overwrite){
+                var stream= new Stream();
+                fs.writeFile(path,stream);
+                stream.write(content);
+                stream.end();
+            }
+        }
+    }
+
+</script>

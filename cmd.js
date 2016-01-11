@@ -82,7 +82,7 @@ var CMD_MODULE = (function () {
                 break;
             case "ace":
                 var rect = w.div.getBoundingClientRect();
-                manager.GraphicWindow(rect.left + 50, rect.top + 50, ' <div id="editor" style="position:absolute;top:0;left:0;width:100%;height:100%;margin:0px;">some text</div><script src="https://raw.githubusercontent.com/ajaxorg/ace-builds/master/src/ace.js" type="text/javascript" charset="utf-8"></script><script>var editor = ace.edit("editor");</script>',true,{fs:fs});
+                manager.GraphicWindow(rect.left + 50, rect.top + 50, "editor.html",false,{fs:fs});
                 break;
             case "set":
                 if (argc != 3) {
