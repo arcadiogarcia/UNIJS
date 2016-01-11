@@ -26,8 +26,8 @@
 <div id="menubar">
     <button onclick="loadFile(prompt('Write the file that you want to open'))">Open</button>
     <button onclick="saveFile(prompt('Write the file that you want to save'))">Save</button>
-    <button>Import</button>
-    <button>Export</button>
+    <button onclick="importFile()">Import</button>
+    <button onclick="downloadFile(prompt('Write the name for the exported file'))">Export</button>
 </div>
 <div id="editor">some text</div>
 <script src="https://raw.githubusercontent.com/ajaxorg/ace-builds/master/src/ace.js" type="text/javascript" charset="utf-8"></script>
@@ -66,6 +66,53 @@
                 stream.end();
             }
         }
+    }
+    
+    
+    function downloadFile(name){
+        var element = document.createElement('a'); 
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(editor.getValue())); 
+        element.setAttribute('download', name); 
+        element.style.display = 'none'; 
+        document.body.appendChild(element); 
+        element.click(); 
+        document.body.removeChild(element);  
+    }
+    
+    function importFile(){
+        
+        function handleFileSelect(evt) {
+            var files = evt.target.files; // FileList object
+
+            // Loop through the FileList and render image files as thumbnails.
+            for (var i = 0, f; f = files[i]; i++) {
+                    if (!f) {
+                        alert("Failed to load file");
+                        continue;
+                    }
+
+            var reader = new FileReader();
+
+            // Closure to capture the file information.
+            reader.onload = (function(theFile) {
+                return function(e) {
+                // Render thumbnail.
+                editor.setValue(e.target.result,-1);
+                };
+            })(f);
+
+            // Read in the image file as a data URL.
+            reader.readAsText(f);
+            }
+        }
+        
+        var element = document.createElement('input'); 
+        element.setAttribute('type', 'file'); 
+        element.style.display = 'none'; 
+        document.body.appendChild(element); 
+        element.addEventListener('change', handleFileSelect, false);
+        element.click(); 
+        document.body.removeChild(element);  
     }
 
 </script>
