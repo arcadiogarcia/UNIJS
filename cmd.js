@@ -152,6 +152,29 @@ var CMD_MODULE = (function () {
                 installProgramFiles(argv.splice(1));
                 _background();
                 break;
+            case "install-lib":
+                function installLibFiles(array) {
+                    if (array.length == 0) {
+                        _return();
+                        return;
+                    }
+                    var x = array[0];
+                    var file = fs.readFile(x);
+                    if (file === false) {
+                        stdout.write("File " + x + " does not exist.");
+                        return;
+                    }
+                    if (file === "Locked") {
+                        stdout.write("File " + x + " is locked by another program.");
+                        return;
+                    }
+                    var content = "";
+                    file.on("data", function (data) { content += data; });
+                    file.on("end", function () { var program = eval(content); registerLibraries([program]); stdout.write("Program " + x + " sucessfully installed."); installLibFiles(array.splice(1)); });
+                }
+                installLibFiles(argv.splice(1));
+                _background();
+                break;
             default:
                 if (programs[command]) {
                     var async = { return: _return, background: _background };
