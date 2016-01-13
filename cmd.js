@@ -82,7 +82,7 @@ var CMD_MODULE = (function () {
                 break;
             case "ace":
                 var rect = w.div.getBoundingClientRect();
-                manager.GraphicWindow(rect.left + 50, rect.top + 50, "editor.html",false,{fs:fs});
+                manager.GraphicWindow(rect.left + 50, rect.top + 50, "editor.html", false, { fs: fs });
                 break;
             case "set":
                 if (argc != 3) {
@@ -129,6 +129,29 @@ var CMD_MODULE = (function () {
                     stdout.write("Use 'man <command>' to get more information");
                 }
                 break;
+            case "install":
+                function installProgramFiles(array) {
+                    if (array.length == 0) {
+                        _return();
+                        return;
+                    }
+                    var x = array[0];
+                    var file = fs.readFile(x);
+                    if (file === false) {
+                        stdout.write("File " + x + " does not exist.");
+                        return;
+                    }
+                    if (file === "Locked") {
+                        stdout.write("File " + x + " is locked by another program.");
+                        return;
+                    }
+                    var content = "";
+                    file.on("data", function (data) { content += data; });
+                    file.on("end", function () { var program = eval(content); registerPrograms([program]); stdout.write("Program " + x + " sucessfully installed."); installProgramFiles(array.splice(1)); });
+                }
+                installProgramFiles(argv.splice(1));
+                _background();
+                break;
             default:
                 if (programs[command]) {
                     var async = { return: _return, background: _background };
@@ -146,29 +169,33 @@ var CMD_MODULE = (function () {
         return stdout;
     }
 
+    function registerPrograms(packages) {
+        packages.forEach(function (x) {
+            if (programs[x.name]) {
+                console.log("The program " + x.name + " is already installed");
+                return;
+            }
+            programs[x.name] = x;
+            x.alias.forEach(function (y) {
+                alias[y] = x.name;
+            });
+        });
+    }
+
+    function registerLibraries(packages) {
+        packages.forEach(function (x) {
+            if (libraries[x.name]) {
+                console.log("The library " + x.name + " is already installed");
+                return;
+            }
+            x.dependencies.forEach(function (x) { if (!libraries[x]) { console.log("Error, the required dependency " + x + " is not installed."); return; } });
+            libraries[x.name] = x;
+        });
+    }
+
     return {
-        registerPrograms: function (packages) {
-            packages.forEach(function (x) {
-                if (programs[x.name]) {
-                    console.log("The program " + x.name + " is already installed");
-                    return;
-                }
-                programs[x.name] = x;
-                x.alias.forEach(function (y) {
-                    alias[y] = x.name;
-                });
-            });
-        },
-        registerLibraries: function (packages) {
-            packages.forEach(function (x) {
-                if (libraries[x.name]) {
-                    console.log("The library " + x.name + " is already installed");
-                    return;
-                }
-                x.dependencies.forEach(function (x) { if (!libraries[x]) { console.log("Error, the required dependency " + x + " is not installed."); return; } });
-                libraries[x.name] = x;
-            });
-        },
+        registerPrograms: registerPrograms,
+        registerLibraries: registerLibraries,
         open: function () {
             //Stuff local to each console
             var fs = FS();
