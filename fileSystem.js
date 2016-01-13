@@ -186,6 +186,53 @@ var FS = (function () {
     function getFileName(path) {
         return path.split("/").splice(-1, 1)[0];
     }
+    
+    function deleteFile(name) {
+            if (name.indexOf("/") != -1) {
+                var oldDir = navigateToParent(name);
+                name = getFileName(name);
+            }
+            var childs = currentFolder.getChilds();
+            if (oldDir != undefined) {
+                navigatePath(oldDir);
+            }
+            childs = childs.filter(function (c) { return c.name == name && c.type=="file"; });
+            if (childs.length > 0) {
+                childs.forEach(function (x) { deleteItem(x.id); });
+                currentFolder.removeChild(name);
+                return true;
+            }
+            return false;
+    }
+    
+    function deleteFolder(name) {
+            if (name.indexOf("/") != -1) {
+                var oldDir = navigateToParent(name);
+                name = getFileName(name);
+            }
+            var childs = currentFolder.getChilds();
+            if (oldDir != undefined) {
+                navigatePath(oldDir);
+            }
+            childs = childs.filter(function (c) { return c.name == name && c.type=="folder"; });
+            if (childs.length > 0) {
+                var oldfolder= currentFolder;              
+                childs.forEach(function (x) {
+                     currentFolder = getItemId(x.id); //Navigate to child
+                     currentFolder.getChilds().filter(function (c) { return c.type=="folder"; }).forEach(function(c){ //Delete all of its childs
+                         deleteChild(c.name);
+                         });
+                     deleteItem(x.id); }); //Delete that item itself
+                currentFolder=oldfolder;
+                currentFolder.removeChild(name); //Remove the child from the list
+                return true;
+            }
+            return false;
+    }
+    
+    function deleteChild(name){
+        return deleteFile(name)||deleteFolder(name); //Try delete file, if fails delete folder,if both fail return false
+    }
 
     return {
         getChilds: function () {
@@ -223,23 +270,9 @@ var FS = (function () {
             }
             return false;
         },
-        deleteFile: function (name) {
-            if (name.indexOf("/") != -1) {
-                var oldDir = navigateToParent(name);
-                name = getFileName(name);
-            }
-            var childs = currentFolder.getChilds();
-            if (oldDir != undefined) {
-                navigatePath(oldDir);
-            }
-            childs = childs.filter(function (c) { return c.name == name; });
-            if (childs.length > 0) {
-                childs.forEach(function (x) { deleteItem(x.id); });
-                currentFolder.removeChild(name);
-                return true;
-            }
-            return false;
-        },
+        deleteFile: deleteFile,
+        deleteFolder: deleteFolder,
+        deleteChild: deleteChild,
         readFile: function (name) {
             if (name.indexOf("/") != -1) {
                 var oldDir = navigateToParent(name);

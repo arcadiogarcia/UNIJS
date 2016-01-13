@@ -74,11 +74,16 @@ corePrograms.push({
     alias: [],
     man: "Deletes a file.\n Execute 'rm <filename>'",
     entryPoint: function (argv, stdin, stdout, include, async) {
-        if (argv.length == 2) {
+        var input= include("argv-parsing")(argv);
+        if (input.args.length >0) {
             var fs=include("fs");
-            fs.deleteFile(argv[1]);
+            if(input.flags["r"]){
+                input.args.forEach(function(x){fs.deleteChild(x);});
+            }else{
+                input.args.forEach(function(x){fs.deleteFile(x);});
+            }
         } else {
-            stdout.write("Incorrect number of arguments.");
+            stdout.write("You should specify something to delete.");
         }
     }
 });
