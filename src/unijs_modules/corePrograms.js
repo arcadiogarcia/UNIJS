@@ -299,11 +299,22 @@ corePrograms.push({
                         "And execute 'tree' to see the folder structure in a fancy way."
         ],
         12:[
+                        "Of course, the command line is not the best solution for everything.",
+                        "That is why you can execute web apps inside UNIJS.",
+                        "But first of all, meet the web browser.",
+                        "Executing 'browser http://uni.js.org' will open UNIJS website."
+        ],
+        13:[
+                        "That is nice for browsing the web, but for real apps we need more features, like offline support and file system access.",
+                        "Maybe you have heard of the Ace text editor, a code editor for the web.",
+                        "UNIJS includes it as an app, with file system support, just try executing 'ace'",
+        ],
+        14:[
                         "One command that is always hand is 'man':",
                         "Executing 'man' will give you a list of the installed programs.",
                         "Executing 'man name' will give you detailed information about that program."
         ],
-        13:[
+        15:[
                         "Thats all for now! You already know how to use UNIJS, the only question now is:",
                         "What do you want to do now?"
         ]};
@@ -352,4 +363,25 @@ corePrograms.push({
             async();
         }
     }
+});
+
+corePrograms.push({
+    name: "unifold",
+    alias: [],
+    man: "Generates an empty app that you can use as a template.",
+    entryPoint: function (argv, stdin, stdout, include, async) {
+            if(argv.length>1){
+                var names=argv.splice(1);
+                var fs= include('fs');
+                names.forEach(function(x){                          
+                            fs.createFile(x+".ujs", '({name: "'+x+'", alias: [], man: "A program called '+x+'", entryPoint: function (argv, stdin, stdout, include, async) { stdout.write("Hello world! I\'m '+x+'.");}})');
+                            stdout.write("File "+x+".ujs created successfully.");
+                });
+                stdout.write("Now you can edit the files (with ace for example).");
+                stdout.write("To install them, just run 'install name.ujs'");
+            }else{
+                stdout.write("A great piece of software starts with a great name, you should specify one."); 
+            }
+
+    }            
 });

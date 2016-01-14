@@ -56,7 +56,8 @@ var CMD_MODULE = (function () {
         "set": "Sets a environment variable",
         "get": "Gets an environment variable",
         "quit": "Closes the terminal",
-        "man": "Gives info about a command"
+        "man": "Gives info about a command",
+        "ace": "Opens the ace text editor"
     };
 
     function executeCommand(input, stdin, w, term, fs) {
@@ -82,7 +83,7 @@ var CMD_MODULE = (function () {
                 break;
             case "ace":
                 var rect = w.div.getBoundingClientRect();
-                manager.GraphicWindow(rect.left + 50, rect.top + 50, "editor.html", false, { fs: fs });
+                manager.GraphicWindow(rect.left + 50, rect.top + 50, "editor/editor.html", false, { fs: fs });
                 break;
             case "set":
                 if (argc != 3) {
