@@ -123,6 +123,15 @@ corePrograms.push({
 });
 
 corePrograms.push({
+    name: "pwd",
+    alias: [],
+    man: "Returns the current path.",
+    entryPoint: function (argv, stdin, stdout, include, async) {
+         stdout.write(include('fs').getCurrentPath());
+    }
+});
+
+corePrograms.push({
     name: "mkdir",
     alias: [],
     man: "Creates a folder in the current folder, the name must be specified in the first parameter.",
@@ -148,6 +157,38 @@ corePrograms.push({
         if (argv.length == 1) {
             var fs=include("fs");
             fs.getChilds().map(function (x) { return x.name; }).forEach(stdout.write);
+        } else {
+            stdout.write("Wrong number of parameters");
+        }
+    }
+});
+
+
+corePrograms.push({
+    name: "cp",
+    alias: [],
+    man: "Copies files or directories",
+    entryPoint: function (argv, stdin, stdout, include, async) {
+        if (argv.length == 3) {
+            var fs=include("fs");
+            var fslib=include("file-system");
+            var t1=fs.getType(argv[1]),t2=fs.getType(argv[2]);
+            if(t2=="file"&&t1=="folder"){
+                stdout.write("You can't copy a folder inside a file.");
+            }else if(t2==false&&t1=="folder"){
+                stdout.write("Destination does not exist. Maybe you have not created the folder yet?");
+            } else if(t2=="folder"&&t1=="folder"){
+                var st=fslib.copyFolder(argv[1],argv[2],fs);
+                if(st.error){
+                    st.issues.forEach(stdout.write);
+                }else{
+                    stdout.write("Folder copied successfully");
+                }
+            }else if((t2=="file"|| t2==false)&&t1=="file"){
+                fslib.copyFile(argv[1],argv[2],fs);
+            }else if(t2=="folder"&&t1=="file"){
+                fslib.copyFile(argv[1],argv[2]+"/"+argv[1].split("/").splice(-1, 1)[0],fs);
+            }    
         } else {
             stdout.write("Wrong number of parameters");
         }
@@ -370,13 +411,33 @@ corePrograms.push({
     alias: [],
     man: "Generates an empty app that you can use as a template.",
     entryPoint: function (argv, stdin, stdout, include, async) {
-            if(argv.length>1){
-                var names=argv.splice(1);
+            var input= include("argv-parsing")(argv);
+            if(input.args.length>0){
+                var names=input.args;
                 var fs= include('fs');
-                names.forEach(function(x){                          
-                            fs.createFile(x+".ujs", '({name: "'+x+'", alias: [], man: "A program called '+x+'", entryPoint: function (argv, stdin, stdout, include, async) { stdout.write("Hello world! I\'m '+x+'.");}})');
-                            stdout.write("File "+x+".ujs created successfully.");
-                });
+                var content;
+                if(input.flags.g && input.flags.l){
+                    stdout.write("A graphical app can't be a library!"); 
+                    return;
+                }else if(input.flags.g){
+                    names.forEach(function(x){        
+                            content='({name: "'+x+'", dependencies: [], content: function () {return "Hello world! I\'m '+x+'.";}})';                  
+                            fs.createFile(x+".app.njs", content);
+                            stdout.write("File "+x+".app.njs created successfully.");
+                    });      
+                }else if(input.flags.l){
+                     names.forEach(function(x){        
+                            content='({name: "'+x+'", dependencies: [], content: function () {return "Hello world! I\'m '+x+'.";}})';               
+                            fs.createFile(x+".lib.njs", content);
+                            stdout.write("File "+x+".lib.njs created successfully.");
+                    });             
+                }else{
+                    names.forEach(function(x){        
+                            content='({name: "'+x+'", alias: [], dependencies:[], man: "A program called '+x+'", entryPoint: function (argv, stdin, stdout, include, async) { stdout.write("Hello world! I\'m '+x+'.");}})';               
+                            fs.createFile(x+".njs", content);
+                            stdout.write("File "+x+".njs created successfully.");
+                    });   
+                }
                 stdout.write("Now you can edit the files (with ace for example).");
                 stdout.write("To install them, just run 'install name.ujs'");
             }else{

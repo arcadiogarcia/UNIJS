@@ -57,7 +57,9 @@ var CMD_MODULE = (function () {
         "get": "Gets an environment variable",
         "quit": "Closes the terminal",
         "man": "Gives info about a command",
-        "ace": "Opens the ace text editor"
+        "ace": "Opens the ace text editor",
+        "install": "Install a program from a file",
+        "install-lib": "Install a library from a file"
     };
 
     function executeCommand(input, stdin, w, term, fs) {
@@ -171,7 +173,7 @@ var CMD_MODULE = (function () {
                     }
                     var content = "";
                     file.on("data", function (data) { content += data; });
-                    file.on("end", function () { var program = eval(content); registerLibraries([program]); stdout.write("Program " + x + " sucessfully installed."); installLibFiles(array.splice(1)); });
+                    file.on("end", function () { var program = eval(content); registerLibraries([program]); stdout.write("Library " + x + " sucessfully installed."); installLibFiles(array.splice(1)); });
                 }
                 installLibFiles(argv.splice(1));
                 _background();
@@ -199,6 +201,9 @@ var CMD_MODULE = (function () {
                 console.log("The program " + x.name + " is already installed");
                 return;
             }
+            if (x.dependencies) {
+                x.dependencies.forEach(function (x) { if (!libraries[x]) { console.log("Error, the required dependency " + x + " is not installed."); return; } });
+            }
             programs[x.name] = x;
             x.alias.forEach(function (y) {
                 alias[y] = x.name;
@@ -212,7 +217,9 @@ var CMD_MODULE = (function () {
                 console.log("The library " + x.name + " is already installed");
                 return;
             }
-            x.dependencies.forEach(function (x) { if (!libraries[x]) { console.log("Error, the required dependency " + x + " is not installed."); return; } });
+            if (x.dependencies) {
+                x.dependencies.forEach(function (x) { if (!libraries[x]) { console.log("Error, the required dependency " + x + " is not installed."); return; } });
+            }
             libraries[x.name] = x;
         });
     }

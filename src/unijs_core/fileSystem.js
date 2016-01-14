@@ -149,6 +149,9 @@ var FS = (function () {
     }
 
     function navigatePath(path) {
+        if(path==undefined){
+            var a=1+1;
+        }
         if (path[0] == "/") {
             while (navigateUp()); //Go to the root
         }
@@ -235,6 +238,19 @@ var FS = (function () {
     }
 
     return {
+        getType:function (path) {
+            var parentPath = path.split("/").slice(0, -1).join("/");
+            name = path.split("/").splice(-1, 1)[0];
+            var cd = getCurrentPath();
+            navigatePath(parentPath);
+            var childs = currentFolder.getChilds();
+            childs = childs.filter(function (c) { return c.name == name; });
+            if(childs.length==0){
+                return false;
+            }
+            navigatePath(cd);
+            return childs[0].type;
+        },
         getChilds: function () {
             return currentFolder.getChilds().map(function (x) { return { name: x.name, type: x.type }; });
         },
