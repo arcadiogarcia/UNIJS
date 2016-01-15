@@ -35,7 +35,9 @@
         CMD.registerLibraries(stdlib);
         CMD.registerPrograms(corePrograms);
 		var manager = WM();
-		manager.Window();
+		var w1=manager.Window();
+        var stdout=CMD.executeCommand("info", Stream(), manager, w1).out;
+        stdout.on("data",alert);
     </script>
 </body>
 

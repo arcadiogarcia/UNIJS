@@ -62,7 +62,7 @@ var CMD_MODULE = (function () {
         "install-lib": "Install a library from a file"
     };
 
-    function executeCommand(input, stdin, w, term, fs) {
+    function executeCommand(input, stdin, w, fs) {
         var stdout = Stream();
         var argv = input.split(" ").filter(function (x) { return x != "" });
         var argc = argv.length;
@@ -72,19 +72,34 @@ var CMD_MODULE = (function () {
         var _return = function () { returned = 1; stdout.end() };
         switch (command) {
             case "cmd":
-                var rect = w.div.getBoundingClientRect();
+                var rect;
+                if (w) {
+                    rect = w.div.getBoundingClientRect();
+                } else {
+                    rect = { left: 50, top: 50 };
+                }
                 manager.Window(rect.left + 50, rect.top + 50);
                 break;
             case "browser":
                 if (argc != 2) {
                     stdout.write("Wrong number of variables");
                 } else {
-                    var rect = w.div.getBoundingClientRect();
+                    var rect;
+                    if (w) {
+                        rect = w.div.getBoundingClientRect();
+                    } else {
+                        rect = { left: 50, top: 50 };
+                    }
                     manager.GraphicWindow(rect.left + 50, rect.top + 50, argv[1]);
                 }
                 break;
             case "ace":
-                var rect = w.div.getBoundingClientRect();
+                var rect;
+                if (w) {
+                    rect = w.div.getBoundingClientRect();
+                } else {
+                    rect = { left: 50, top: 50 };
+                }
                 manager.GraphicWindow(rect.left + 50, rect.top + 50, "editor/editor.html", false, { fs: fs });
                 break;
             case "set":
@@ -105,7 +120,9 @@ var CMD_MODULE = (function () {
                 }
                 break;
             case "quit":
-                setTimeout(manager.close(w.id), 0);
+                if (w) {
+                    setTimeout(manager.close(w.id), 0);
+                }
                 break;
             case "man":
             case "help":
@@ -224,93 +241,114 @@ var CMD_MODULE = (function () {
         });
     }
 
+    function termInputHandler(fs, cmdhandler, w, manager, input, term) {
+        cmdhandler.cd = fs.getCurrentPath;
+        var currentStream = Stream();
+        var stdin = currentStream;
+
+        term.push(function (input, term) {
+            stdin.write(input);
+        },
+            {
+                prompt: '',
+                name: input,
+                keydown: function (event) {
+                    if ((event.which == 68 && event.ctrlKey)) {
+                        if (handlers.ctrld) {
+                            handlers.ctrld();
+                        };
+                    }
+                }
+            });
+        var result = inputHandler(input, fs, stdin, manager, w);
+        result.out.on("data", function (x) {
+            term.echo(outputColor(x));
+        });
+        result.out.on("end", function (x) {
+            term.pop();
+        });
+        result.cmd.on("data", function (x) {
+            term.echo(defaultColor(x));
+        });
+        result.cmd.on("end", function (x) {
+            term.pop();
+        });
+    }
+
+    function inputHandler(input, fs, stdin, manager, w) {
+        var cmdout = Stream();
+        var pipedCommands = input.split("|");
+        var currentStream = stdin;
+        for (var i = 0; i < pipedCommands.length; i++) {
+            var command = pipedCommands[i];
+            var subcommands;
+            if (command.indexOf("<") != -1) {
+                subcommands = command.split("<");
+                var file = fs.readFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0]);
+                if (file === false) {
+                    cmdout.write("File " + subcommands[1] + " does not exist.");
+                    cmdout.end();
+                    return;
+                }
+                if (file === "Locked") {
+                    cmdout.write("This file is locked by another program.");
+                    cmdout.end();
+                    return;
+                }
+                currentStream = executeCommand(subcommands[0], file, w, fs);
+            } else if (command.indexOf(">>") != -1) {
+                subcommands = command.split(">>");
+                var outputstream = executeCommand(subcommands[0], currentStream, w, fs);
+                var tee = StreamTee();
+                outputstream.pipe(tee);
+                var writestream = Stream();
+                tee.on1("data", function (x) { writestream.write(x + "\n"); });
+                tee.on1("end", writestream.end);
+                var consolestream = Stream();
+                handlers.ctrld = function () { writestream.end() };
+                tee.on2("end", consolestream.end);
+                if (fs.appendFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
+                    cmdout.write("This file is locked by another program.");
+                    cmdout.end();
+                    return;
+                }
+                currentStream = consolestream;
+            } else if (command.indexOf(">") != -1) {
+                subcommands = command.split(">");
+                var outputstream = executeCommand(subcommands[0], currentStream, w, fs);
+                var tee = StreamTee();
+                outputstream.pipe(tee);
+                var writestream = Stream();
+                tee.on1("data", function (x) { writestream.write(x + "\n"); });
+                tee.on1("end", writestream.end);
+                var consolestream = Stream();
+                handlers.ctrld = function () { writestream.end() };
+                tee.on2("end", consolestream.end);
+                if (fs.writeFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
+                    cmdout.write("This file is locked by another program.");
+                    cmdout.end();
+                    return;
+                }
+                currentStream = consolestream;
+            } else {
+                currentStream = executeCommand(pipedCommands[i], currentStream, w, fs);
+            }
+        }
+        return { out: currentStream, cmd: cmdout };
+    }
+
     return {
         registerPrograms: registerPrograms,
         registerLibraries: registerLibraries,
         open: function () {
             //Stuff local to each console
             var fs = FS();
-            return function (cmdhandler, w, manager, input, term) {
-                cmdhandler.cd = fs.getCurrentPath;
-                var currentStream = Stream();
-                var stdin = currentStream;
-                var pipedCommands = input.split("|");
-                term.push(function (input, term) {
-                    stdin.write(input);
-                },
-                    {
-                        prompt: '',
-                        name: input,
-                        keydown: function (event) {
-                            if ((event.which == 68 && event.ctrlKey)) {
-                                if (handlers.ctrld) {
-                                    handlers.ctrld();
-                                };
-                            }
-                        }
-                    });
-                for (var i = 0; i < pipedCommands.length; i++) {
-                    var command = pipedCommands[i];
-                    var subcommands;
-                    if (command.indexOf("<") != -1) {
-                        subcommands = command.split("<");
-                        var file = fs.readFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0]);
-                        if (file === false) {
-                            term.echo(defaultColor("File " + subcommands[1] + " does not exist."));
-                            term.pop();
-                            return;
-                        }
-                        if (file === "Locked") {
-                            term.echo(defaultColor("This file is locked by another program."));
-                            term.pop();
-                            return;
-                        }
-                        currentStream = executeCommand(subcommands[0], file, w, term, fs);
-                    } else if (command.indexOf(">>") != -1) {
-                        subcommands = command.split(">>");
-                        var outputstream = executeCommand(subcommands[0], currentStream, w, term, fs);
-                        var tee = StreamTee();
-                        outputstream.pipe(tee);
-                        var writestream = Stream();
-                        tee.on1("data", function (x) { writestream.write(x + "\n"); });
-                        tee.on1("end", writestream.end);
-                        var consolestream = Stream();
-                        handlers.ctrld = function () { writestream.end() };
-                        tee.on2("end", consolestream.end);
-                        if (fs.appendFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
-                            term.echo("This file is locked by another program.");
-                            term.pop();
-                            return;
-                        }
-                        currentStream = consolestream;
-                    } else if (command.indexOf(">") != -1) {
-                        subcommands = command.split(">");
-                        var outputstream = executeCommand(subcommands[0], currentStream, w, term, fs);
-                        var tee = StreamTee();
-                        outputstream.pipe(tee);
-                        var writestream = Stream();
-                        tee.on1("data", function (x) { writestream.write(x + "\n"); });
-                        tee.on1("end", writestream.end);
-                        var consolestream = Stream();
-                        handlers.ctrld = function () { writestream.end() };
-                        tee.on2("end", consolestream.end);
-                        if (fs.writeFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
-                            term.echo(defaultColor("This file is locked by another program."));
-                            term.pop();
-                            return;
-                        }
-                        currentStream = consolestream;
-                    } else {
-                        currentStream = executeCommand(pipedCommands[i], currentStream, w, term, fs);
-                    }
-                }
-                currentStream.on("data", function (x) {
-                    term.echo(outputColor(x));
-                });
-                currentStream.on("end", function (x) {
-                    term.pop();
-                });
-            };
+            return termInputHandler.bind(this, fs);
+        },
+        executeCommand: function (input, stdin, WM, w) {
+            //Stuff local to each console
+            var fs = FS();
+            return inputHandler(input, fs, stdin, WM, w);
         }
     };
 });
