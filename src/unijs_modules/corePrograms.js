@@ -4,7 +4,7 @@ corePrograms.push({
     name: "info",
     alias: [],
     man: "This command gives you info about the system.",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         stdout.write("UNIJS 0.1");
         stdout.write("Running on:");
         stdout.write(navigator.userAgent);
@@ -15,7 +15,7 @@ corePrograms.push({
     name: "echo",
     alias: [],
     man: "This command behaves like a parrot.\nExecute with no arguments to pipe the input to the output.\nExecute with arguments to print them in the output.",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         if (argv.length > 1) {
             for (var i = 1; i < argv.length; i++) {
                 stdout.write(argv[i]);
@@ -32,7 +32,7 @@ corePrograms.push({
     name: "js",
     alias: [],
     man: "Executes JavaScript code.\nExecute with no arguments to get a JS command line.\nYou can also execute js followed by the code.",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         if (argv.length > 1) {
             argv.shift();
             stdout.write(eval(argv.join(" ")));
@@ -48,23 +48,23 @@ corePrograms.push({
     name: "cat",
     alias: [],
     man: "Shows the content of a file.\n Execute 'cat <filename>'",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         if (argv.length == 2) {
             var fs=include("fs");
             var file = fs.readFile(argv[1]);
             if (file === false) {
-                stdout.write("File " + argv[1] + " does not exist.");
+                stderr.write("File " + argv[1] + " does not exist.");
                 return;
             }
             if (file === "Locked") {
-                stdout.write("This file is locked by another program.");
+                stderr.write("This file is locked by another program.");
                 return;
             }
             file.on("data", function (data) { stdout.write(data) });
             file.on("end", function () { async.return() });
             async.background();
         } else {
-            stdout.write("Incorrect number of arguments.");
+            stderr.write("Incorrect number of arguments.");
         }
     }
 });
@@ -73,7 +73,7 @@ corePrograms.push({
     name: "rm",
     alias: [],
     man: "Deletes a file.\n Execute 'rm <filename>'",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         var input= include("argv-parsing")(argv);
         if (input.args.length >0) {
             var fs=include("fs");
@@ -83,7 +83,7 @@ corePrograms.push({
                 input.args.forEach(function(x){fs.deleteFile(x);});
             }
         } else {
-            stdout.write("You should specify something to delete.");
+            stderr.write("You should specify something to delete.");
         }
     }
 });
@@ -92,7 +92,7 @@ corePrograms.push({
     name: "caesar",
     alias: [],
     man: "Vini, vidi, encodi.\n Must be executed with one argument, 'caesar <n>' \n It will add n to the unicode code of each character in the input and print it to output.",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         if (argv.length != 2) {
 
         } else {
@@ -108,16 +108,16 @@ corePrograms.push({
     name: "cd",
     alias: [],
     man: "Executed with no arguments, prints the current path.\nExecuted with one argument, navigates to that relative path.",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         if (argv.length == 1) {
             stdout.write(fs.getCurrentPath());
         } else if (argv.length == 2) {
             var fs=include("fs");
             if (!fs.navigatePath(argv[1])) {
-                stdout.write("The path is invalid or does not exist.");
+                stderr.write("The path is invalid or does not exist.");
             }
         } else {
-            stdout.write("Wrong number of parameters");
+            stderr.write("Wrong number of parameters");
         }
     }
 });
@@ -126,7 +126,7 @@ corePrograms.push({
     name: "pwd",
     alias: [],
     man: "Returns the current path.",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
          stdout.write(include('fs').getCurrentPath());
     }
 });
@@ -135,16 +135,16 @@ corePrograms.push({
     name: "mkdir",
     alias: [],
     man: "Creates a folder in the current folder, the name must be specified in the first parameter.",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         if (argv.length == 2) {
             var fs=include("fs");
             if (fs.createFolder(argv[1])) {
 
             } else {
-                stdout.write("That folder already exists");
+                stderr.write("That folder already exists");
             }
         } else {
-            stdout.write("Wrong number of parameters");
+            stderr.write("Wrong number of parameters");
         }
     }
 });
@@ -153,12 +153,12 @@ corePrograms.push({
     name: "ls",
     alias: ["dir"],
     man: "Shows the content of the current folder.",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         if (argv.length == 1) {
             var fs=include("fs");
             fs.getChilds().map(function (x) { return x.name; }).forEach(stdout.write);
         } else {
-            stdout.write("Wrong number of parameters");
+            stderr.write("Wrong number of parameters");
         }
     }
 });
@@ -168,21 +168,21 @@ corePrograms.push({
     name: "cp",
     alias: [],
     man: "Copies files or directories",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         if (argv.length == 3) {
             var fs=include("fs");
             var fslib=include("file-system");
             var t1=fs.getType(argv[1]),t2=fs.getType(argv[2]);
             if(t2=="file"&&t1=="folder"){
-                stdout.write("You can't copy a folder inside a file.");
+                stderr.write("You can't copy a folder inside a file.");
             }else if(t2==false&&t1=="folder"){
-                stdout.write("Destination does not exist. Maybe you have not created the folder yet?");
+                stderr.write("Destination does not exist. Maybe you have not created the folder yet?");
             } else if(t2=="folder"&&t1=="folder"){
                 var st=fslib.copyFolder(argv[1],argv[2],fs);
                 if(st.error){
-                    st.issues.forEach(stdout.write);
+                    st.issues.forEach(stderr.write);
                 }else{
-                    stdout.write("Folder copied successfully");
+                    stderr.write("Folder copied successfully");
                 }
             }else if((t2=="file"|| t2==false)&&t1=="file"){
                 fslib.copyFile(argv[1],argv[2],fs);
@@ -190,7 +190,7 @@ corePrograms.push({
                 fslib.copyFile(argv[1],argv[2]+"/"+argv[1].split("/").splice(-1, 1)[0],fs);
             }    
         } else {
-            stdout.write("Wrong number of parameters");
+            stderr.write("Wrong number of parameters");
         }
     }
 });
@@ -199,7 +199,7 @@ corePrograms.push({
     name: "tree",
     alias: [],
     man: "Prints the structure of the current folder as a tree.",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         function printTree(level, levelsfinished) {
             var tabs = "", i = 0;
             level = level || 0;
@@ -231,7 +231,7 @@ corePrograms.push({
             stdout.write(fs.getCurrentFolder());
             printTree();
         } else {
-            stdout.write("Wrong number of parameters");
+            stderr.write("Wrong number of parameters");
         }
     }
 });
@@ -240,7 +240,7 @@ corePrograms.push({
     name: "wget",
     alias: [],
     man: "Retrieves content from the web.\n Execute 'curl <url>'",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         if (argv.length == 2) {
             var xhr = XMLHttpRequest();
             xhr.onload = function () {
@@ -248,8 +248,8 @@ corePrograms.push({
                     stdout.write(this.responseText);
                     async.return();
                 } else {
-                    stdout.write("Error " + this.status);
-                    stdout.write(this.responseText);
+                    stderr.write("Error " + this.status);
+                    stderr.write(this.responseText);
                     async.return();
                 }
             }
@@ -257,7 +257,7 @@ corePrograms.push({
             xhr.send();
             async.background();
         } else {
-            stdout.write("Wrong number of parameters");
+            stderr.write("Wrong number of parameters");
         }
     }
 });
@@ -266,7 +266,7 @@ corePrograms.push({
     name: "tutorial",
     alias: [],
     man: "Teaches the basics of UNIJS",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         var fs=include("fs");
         var messages={0:[
                         "Welcome to UNIJS, I will be your guide.",
@@ -375,7 +375,7 @@ corePrograms.push({
 
         var file = fs.readFile("/etc/tutorial/state.data");
         if (file === "Locked") {
-            stdout.write("Error, maybe there is another instance of this program running?");
+            stderr.write("Error, maybe there is another instance of this program running?");
             return;
         }
         if (file === false) {
@@ -410,14 +410,14 @@ corePrograms.push({
     name: "unifold",
     alias: [],
     man: "Generates an empty app that you can use as a template.",
-    entryPoint: function (argv, stdin, stdout, include, async) {
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
             var input= include("argv-parsing")(argv);
             if(input.args.length>0){
                 var names=input.args;
                 var fs= include('fs');
                 var content;
                 if(input.flags.g && input.flags.l){
-                    stdout.write("A graphical app can't be a library!"); 
+                    stderr.write("A graphical app can't be a library!"); 
                     return;
                 }else if(input.flags.g){
                     names.forEach(function(x){        
@@ -433,7 +433,7 @@ corePrograms.push({
                     });             
                 }else{
                     names.forEach(function(x){        
-                            content='({name: "'+x+'", alias: [], dependencies:[], man: "A program called '+x+'", entryPoint: function (argv, stdin, stdout, include, async) { stdout.write("Hello world! I\'m '+x+'.");}})';               
+                            content='({name: "'+x+'", alias: [], dependencies:[], man: "A program called '+x+'", entryPoint: function (argv, stdin, stdout, stderr, include, async) { stdout.write("Hello world! I\'m '+x+'.");}})';               
                             fs.createFile(x+".njs", content);
                             stdout.write("File "+x+".njs created successfully.");
                     });   

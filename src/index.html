@@ -37,10 +37,18 @@
 		var manager = WM();
 		var w1=manager.Window();
         var result=CMD.executeCommand("cat /etc/rc.local", Stream(), manager, w1);
-        var initscript=[];
-        result.out.on("data",initscript.push.bind(initscript));
-        result.out.on("end",function(){
-            initscript.forEach(CMD.executeCommand);
+        var initscript="";
+        result.stdout.on("data",function(x){initscript+=x;});
+        result.stdout.on("end",function(){
+            if(initscript==""){ //If the init file has not been created
+                var fs=FS();
+                fs.navigatePath("/");
+                fs.createFolder("etc");
+                fs.navigateChild("etc");
+                fs.createFile("rc.local","echo probando > init.txt\necho probando2 > init2.txt");
+                fs=null;
+            }
+        result=CMD.executeCommand("cmd /etc/rc.local", Stream(), manager, w1); //This may take a while, the window is already open
         });
     </script>
 </body>
