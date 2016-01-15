@@ -27,6 +27,15 @@
     <div id="highlightBottom"></div>
     <script src="unijs_core/windows.js"></script>
     <script>
+var unijsinit=
+`cd /
+mkdir home
+mkdir user
+cd user
+mkdir bin
+mkdir lib`;        
+        
+        
         if(typeof Windows != "undefined"){
             var applicationView = Windows.UI.ViewManagement.ApplicationView.getForCurrentView();
             var boolean = applicationView.tryEnterFullScreenMode();
@@ -46,6 +55,8 @@
                 fs.createFolder("etc");
                 fs.navigateChild("etc");
                 fs.createFile("rc.local","echo probando > init.txt\necho probando2 > init2.txt");
+                fs.createFile("unijs.init",unijsinit);
+                result=CMD.executeCommand("cmd /etc/unijs.init", Stream(), manager, w1); 
                 fs=null;
             }
         result=CMD.executeCommand("cmd /etc/rc.local", Stream(), manager, w1); //This may take a while, the window is already open

@@ -9,6 +9,7 @@ var FS = (function () {
     }
 
     function getNextId() {
+        nextId=+localStorage.nextId;
         localStorage.nextId = nextId + 1;
         return nextId++;
     }
@@ -20,6 +21,14 @@ var FS = (function () {
         var parent = parent_i;
 
         function save() {
+            if(localStorage[id]){
+                var storageChilds=JSON.parse(localStorage[id]).childs;
+                storageChilds.forEach(function(x){ //For each element in the hdd
+                if(childs.filter(function(y){return y.id==x.id}).length==0){//If there are no elements with the same id
+                    childs.push(x);
+                }
+                });
+            }
             localStorage[id] = JSON.stringify({ name: name, childs: childs, parent: parent, id: id, type: "folder" });
         }
         save();
@@ -68,6 +77,14 @@ var FS = (function () {
         var parent = f.parent
 
         function save() {
+            if(localStorage[id]){
+                var storageChilds=JSON.parse(localStorage[id]).childs;
+                storageChilds.forEach(function(x){ //For each element in the hdd
+                if(childs.filter(function(y){return y.id==x.id}).length==0){//If there are no elements with the same id
+                    childs.push(x);
+                }
+                });
+            }
             localStorage[id] = JSON.stringify({ name: name, childs: childs, parent: parent, id: id, type: "folder" });
         }
 
