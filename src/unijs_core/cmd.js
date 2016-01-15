@@ -72,17 +72,49 @@ var CMD_MODULE = (function () {
         var _return = function () { returned = 1; stdout.end() };
         switch (command) {
             case "cmd":
-                var rect;
-                if (w) {
-                    rect = w.div.getBoundingClientRect();
+                if (argc == 1) {
+                    var rect;
+                    if (w) {
+                        rect = w.div.getBoundingClientRect();
+                    } else {
+                        rect = { left: 50, top: 50 };
+                    }
+                    manager.Window(rect.left + 50, rect.top + 50);
+                    
+                } else if (argc == 2) {
+                    var file = fs.readFile(argv[1]);
+                    if (file === false) {
+                        stdout.write("File " + argv[1] + " does not exist.");
+                        return;
+                    }
+                    if (file === "Locked") {
+                        stdout.write("This file is locked by another program.");
+                        return;
+                    }
+                    var initscript=[];
+                    file.on("data",initscript.push.bind(initscript));
+                    file.on("end", function () {
+                        //Execute all instructions async one by one until the array is empty
+                        executeInstruction(initscript.map(function(x){return executeCommand.bind(this,x.trim());}));
+                        function executeInstruction(array){
+                            if(array.length==0){
+                                 _return();
+                                return;
+                            }
+                            var i=array.shift();
+                            var thisstdout=i(stdin, w, fs);
+                            thisstdout.on("data", stdout.write);
+                            thisstdout.on("end", function(){executeInstruction(array)});
+                        }                    
+                    });
+                    _background();
                 } else {
-                    rect = { left: 50, top: 50 };
+                    stdout.write("Wrong number of parameters");
                 }
-                manager.Window(rect.left + 50, rect.top + 50);
                 break;
             case "browser":
                 if (argc != 2) {
-                    stdout.write("Wrong number of variables");
+                    stdout.write("Wrong number of parameters");
                 } else {
                     var rect;
                     if (w) {

@@ -36,8 +36,12 @@
         CMD.registerPrograms(corePrograms);
 		var manager = WM();
 		var w1=manager.Window();
-        var stdout=CMD.executeCommand("info", Stream(), manager, w1).out;
-        stdout.on("data",alert);
+        var result=CMD.executeCommand("cat /etc/rc.local", Stream(), manager, w1);
+        var initscript=[];
+        result.out.on("data",initscript.push.bind(initscript));
+        result.out.on("end",function(){
+            initscript.forEach(CMD.executeCommand);
+        });
     </script>
 </body>
 
