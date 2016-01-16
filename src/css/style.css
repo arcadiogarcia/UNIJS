@@ -103,7 +103,7 @@ html,body {
     width:100%;
     height:100%;
     display:block;
-    background-color: #222;
+    background-color: #000;
     color:#CCC;
     text-align: center;
     font-size: 60px;
@@ -116,7 +116,6 @@ html,body {
 
 #loaderText{
     display:block;
-    background-color: #222;
     color:#CCC;
     text-align: center;
     font-size: 60px;
@@ -125,5 +124,3 @@ html,body {
     display: flex; 
     align-items: center; 
 }
-
-.

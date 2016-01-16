@@ -31,4 +31,25 @@
     animation-duration: 1s;
     animation-timing-function: ease-out;
     animation-fill-mode: both;
+    background:#225 !important;
  } 
+ 
+ @keyframes solid {
+    0% {background:black;}
+    100% {background:#225;}
+ }
+ 
+  .solid {
+    animation-name: solid;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-out;
+    animation-fill-mode: both;
+ } 
+ 
+ .blink {
+  animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {  
+  50% { opacity: 0.0; }
+}
