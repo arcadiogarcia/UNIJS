@@ -25,6 +25,7 @@
     <div id="highlightRight"></div>
     <div id="highlightTop"></div>
     <div id="highlightBottom"></div>
+    <div id="loader"><div id="loaderText">Loading<div><div>
     <script src="unijs_core/windows.js"></script>
     <script>
         var unijsinit=
@@ -34,7 +35,17 @@
 `cd /usr/bin
 cat /usr/bin_list | install
 `;        
-        
+        var loader={
+            hardReset:function(){
+                document.getElementById("loaderText").innerHTML="UNIJS is setting up your environment, This will only happen the first time.";
+            },
+            startup:function(){
+                document.getElementById("loaderText").innerHTML="Executing UNIJS startup script.";
+            },
+            clear:function(){
+                document.getElementById("loader").className+=" slideDown";
+            }
+        };
         
         if(typeof Windows != "undefined"){
             var applicationView = Windows.UI.ViewManagement.ApplicationView.getForCurrentView();
@@ -46,6 +57,7 @@ cat /usr/bin_list | install
         var fs=FS();
         var result=fs.readFile("/etc/rc.local");
         if(result==false){ //If the init file has not been created
+                loader.hardReset();
                 fs.navigatePath("/");
                 fs.createFolder("etc");
                 fs.navigateChild("etc");
@@ -71,14 +83,17 @@ cat /usr/bin_list | install
             startup();
         }
         function startup(){
+            loader.startup();
             fs=null;
             CMD.registerLibraries(stdlib);
             CMD.registerPrograms(corePrograms);
             result=CMD.executeCommand("cmd /etc/rc.local", Stream(), manager, w1); //This may take a while, the window is already open
             result.stdout.on("end", function(){
-
+                    loader.clear();
             })
         }
+        
+        
     </script>
 </body>
 

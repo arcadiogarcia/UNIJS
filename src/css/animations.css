@@ -20,3 +20,15 @@
     animation-duration: 0.3s;
     animation-timing-function: ease-out;
  } 
+ 
+  @keyframes slidedown {
+    0% {top:0%}
+    100% {top:110%;}
+ }
+ 
+  .slidedown {
+    animation-name: slidedown;
+    animation-duration: 1s;
+    animation-timing-function: ease-out;
+    animation-fill-mode: both;
+ } 
