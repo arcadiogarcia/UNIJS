@@ -439,10 +439,21 @@ corePrograms.push({
                     });   
                 }
                 stdout.write("Now you can edit the files (with ace for example).");
-                stdout.write("To install them, just run 'install name.ujs'");
+                stdout.write("To install them, just run 'install name.njs'");
             }else{
                 stdout.write("A great piece of software starts with a great name, you should specify one."); 
             }
 
     }            
+});
+
+
+corePrograms.push({
+    name: "reset",
+    alias: [],
+    man: "This command resets UNIJS.",
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
+        localStorage.clear();
+        location=location; //F5
+    }
 });

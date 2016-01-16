@@ -27,13 +27,13 @@
     <div id="highlightBottom"></div>
     <script src="unijs_core/windows.js"></script>
     <script>
-var unijsinit=
-`cd /
-mkdir home
-mkdir user
-cd user
-mkdir bin
-mkdir lib`;        
+        var unijsinit=
+``;  
+
+        var rclocal=
+`cd /usr/bin
+cat /usr/bin_list | install
+`;        
         
         
         if(typeof Windows != "undefined"){
@@ -41,26 +41,44 @@ mkdir lib`;
             var boolean = applicationView.tryEnterFullScreenMode();
         }
         var CMD=CMD_MODULE();
-        CMD.registerLibraries(stdlib);
-        CMD.registerPrograms(corePrograms);
 		var manager = WM();
 		var w1=manager.Window();
-        var result=CMD.executeCommand("cat /etc/rc.local", Stream(), manager, w1);
-        var initscript="";
-        result.stdout.on("data",function(x){initscript+=x;});
-        result.stdout.on("end",function(){
-            if(initscript==""){ //If the init file has not been created
-                var fs=FS();
+        var fs=FS();
+        var result=fs.readFile("/etc/rc.local");
+        if(result==false){ //If the init file has not been created
                 fs.navigatePath("/");
                 fs.createFolder("etc");
                 fs.navigateChild("etc");
-                fs.createFile("rc.local","echo probando > init.txt\necho probando2 > init2.txt");
+                fs.createFile("rc.local",rclocal);
                 fs.createFile("unijs.init",unijsinit);
-                result=CMD.executeCommand("cmd /etc/unijs.init", Stream(), manager, w1); 
-                fs=null;
-            }
-        result=CMD.executeCommand("cmd /etc/rc.local", Stream(), manager, w1); //This may take a while, the window is already open
-        });
+                fs.navigatePath("/");
+                fs.createFolder("home");
+                fs.createFolder("usr");
+                fs.navigateChild("usr");
+                fs.createFolder("bin");
+                fs.createFolder("lib");
+                result=CMD.executeCommand("cmd /etc/unijs.init", Stream(), manager, w1);     
+                result.stderr.on("data", function(x){
+                    console.log(x);
+                });  
+                result.stdout.on("data", function(x){
+                    console.log(x);
+                });   
+                result.stdout.on("end", function(){
+                    startup();
+                }); 
+        }else{
+            startup();
+        }
+        function startup(){
+            fs=null;
+            CMD.registerLibraries(stdlib);
+            CMD.registerPrograms(corePrograms);
+            result=CMD.executeCommand("cmd /etc/rc.local", Stream(), manager, w1); //This may take a while, the window is already open
+            result.stdout.on("end", function(){
+
+            })
+        }
     </script>
 </body>
 

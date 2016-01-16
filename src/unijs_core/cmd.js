@@ -62,7 +62,7 @@ var CMD_MODULE = (function () {
         "install-lib": "Install a library from a file"
     };
 
-    function executeCommand(input, stdin,stderr, w, fs,wm) {
+    function executeCommand(input, stdin, stderr, w, fs, wm) {
         var stdout = Stream();
         var argv = input.split(" ").filter(function (x) { return x != "" });
         var argc = argv.length;
@@ -80,7 +80,7 @@ var CMD_MODULE = (function () {
                         rect = { left: 50, top: 50 };
                     }
                     manager.Window(rect.left + 50, rect.top + 50);
-                    
+
                 } else if (argc == 2) {
                     var file = fs.readFile(argv[1]);
                     if (file === false) {
@@ -91,23 +91,23 @@ var CMD_MODULE = (function () {
                         stderr.write("This file is locked by another program.");
                         return;
                     }
-                    var initscript=[];
-                    file.on("data",initscript.push.bind(initscript));
+                    var initscript = [];
+                    file.on("data", initscript.push.bind(initscript));
                     file.on("end", function () {
                         //Execute all instructions async one by one until the array is empty
                         
-                        executeInstruction(initscript.map(function(x){return inputHandler.bind(this,x.trim());}));
-                        function executeInstruction(array){
-                            if(array.length==0){
-                                 _return();
+                        executeInstruction(initscript.map(function (x) { return inputHandler.bind(this, x.trim()); }));
+                        function executeInstruction(array) {
+                            if (array.length == 0) {
+                                _return();
                                 return;
                             }
-                            var i=array.shift();
-                            var thisstdout=i(fs,stdin,wm,w);
+                            var i = array.shift();
+                            var thisstdout = i(fs, stdin, wm, w);
                             thisstdout.stdout.on("data", stdout.write);
                             thisstdout.stderr.on("data", stderr.write);
-                            thisstdout.stdout.on("end", function(){executeInstruction(array)});
-                        }                    
+                            thisstdout.stdout.on("end", function () { executeInstruction(array) });
+                        }
                     });
                     _background();
                 } else {
@@ -184,12 +184,15 @@ var CMD_MODULE = (function () {
                 }
                 break;
             case "install":
+                var ended = true;// Only used for async form stdin
                 function installProgramFiles(array) {
                     if (array.length == 0) {
-                        _return();
+                        if (ended == true) {
+                            _return();
+                        }
                         return;
                     }
-                    var x = array[0];
+                    var x = array.shift().trim();
                     var file = fs.readFile(x);
                     if (file === false) {
                         stderr.write("File " + x + " does not exist.");
@@ -201,9 +204,23 @@ var CMD_MODULE = (function () {
                     }
                     var content = "";
                     file.on("data", function (data) { content += data; });
-                    file.on("end", function () { var program = eval(content); registerPrograms([program]); stdout.write("Program " + x + " sucessfully installed."); installProgramFiles(array.splice(1)); });
+                    file.on("end", function () { var program = eval(content); registerPrograms([program]); stdout.write("Program " + x + " sucessfully installed."); installProgramFiles(array); });
                 }
-                installProgramFiles(argv.splice(1));
+                if (argv.length > 1) {
+                    installProgramFiles(argv.splice(1));
+                } else {
+                    ended=false;
+                    var array_programs = [];
+                    stdin.on("data", function (x) {
+                        array_programs.push(x);
+                        if(array_programs.length==1){
+                            installProgramFiles(array_programs);
+                        }
+                    });
+                    stdin.on("end", function () {
+                        ended = true;
+                    });
+                }
                 _background();
                 break;
             case "install-lib":
@@ -233,7 +250,7 @@ var CMD_MODULE = (function () {
                 if (programs[command]) {
                     var async = { return: _return, background: _background };
                     var include = function (x) { if (x == "fs") { return fs } return libraries[x].content };
-                    programs[command].entryPoint(argv, stdin, stdout,stderr, include, async);
+                    programs[command].entryPoint(argv, stdin, stdout, stderr, include, async);
                 } else {
                     stderr.write("Unknown command \"" + command + "\"");
                 }
@@ -259,6 +276,20 @@ var CMD_MODULE = (function () {
             x.alias.forEach(function (y) {
                 alias[y] = x.name;
             });
+
+            var fs = FS();
+            var sFile = Stream();
+            fs.writeFile("/usr/bin/" + x.name, sFile);
+            var fileContent = JSON.stringify(x);
+            fileContent = fileContent.slice(0, fileContent.length - 1);
+            fileContent = "(" + fileContent + ",entryPoint:" + x.entryPoint.toString() + "});"
+            sFile.write(fileContent);
+            sFile.end();
+
+            sFile = Stream();
+            fs.appendFile("/usr/bin_list", sFile);
+            sFile.write("/usr/bin/" + x.name + "\n");
+            sFile.end();
         });
     }
 
@@ -329,10 +360,10 @@ var CMD_MODULE = (function () {
                     stderr.end();
                     return;
                 }
-                currentStream = executeCommand(subcommands[0], file,stderr, w, fs,manager);
+                currentStream = executeCommand(subcommands[0], file, stderr, w, fs, manager);
             } else if (command.indexOf(">>") != -1) {
                 subcommands = command.split(">>");
-                var outputstream = executeCommand(subcommands[0], currentStream,stderr, w, fs,manager);
+                var outputstream = executeCommand(subcommands[0], currentStream, stderr, w, fs, manager);
                 var tee = StreamTee();
                 outputstream.pipe(tee);
                 var writestream = Stream();
@@ -349,7 +380,7 @@ var CMD_MODULE = (function () {
                 currentStream = consolestream;
             } else if (command.indexOf(">") != -1) {
                 subcommands = command.split(">");
-                var outputstream = executeCommand(subcommands[0], currentStream,stderr, w, fs,manager);
+                var outputstream = executeCommand(subcommands[0], currentStream, stderr, w, fs, manager);
                 var tee = StreamTee();
                 outputstream.pipe(tee);
                 var writestream = Stream();
@@ -365,7 +396,7 @@ var CMD_MODULE = (function () {
                 }
                 currentStream = consolestream;
             } else {
-                currentStream = executeCommand(pipedCommands[i], currentStream,stderr, w, fs,manager);
+                currentStream = executeCommand(pipedCommands[i], currentStream, stderr, w, fs, manager);
             }
         }
         return { stdout: currentStream, stderr: stderr };
