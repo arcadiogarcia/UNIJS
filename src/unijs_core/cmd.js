@@ -224,12 +224,15 @@ var CMD_MODULE = (function () {
                 _background();
                 break;
             case "install-lib":
-                function installLibFiles(array) {
+                var ended = true;// Only used for async form stdin
+                function installLibraryFiles(array) {
                     if (array.length == 0) {
-                        _return();
+                        if (ended == true) {
+                            _return();
+                        }
                         return;
                     }
-                    var x = array[0];
+                    var x = array.shift().trim();
                     var file = fs.readFile(x);
                     if (file === false) {
                         stderr.write("File " + x + " does not exist.");
@@ -241,9 +244,23 @@ var CMD_MODULE = (function () {
                     }
                     var content = "";
                     file.on("data", function (data) { content += data; });
-                    file.on("end", function () { var program = eval(content); registerLibraries([program]); stdout.write("Library " + x + " sucessfully installed."); installLibFiles(array.splice(1)); });
+                    file.on("end", function () { var program = eval(content); registerLibraries([program]); stdout.write("Program " + x + " sucessfully installed."); installLibraryFiles(array); });
                 }
-                installLibFiles(argv.splice(1));
+                if (argv.length > 1) {
+                   installLibraryFiles(argv.splice(1));
+                } else {
+                    ended=false;
+                    var array_programs = [];
+                    stdin.on("data", function (x) {
+                        array_programs.push(x);
+                        if(array_programs.length==1){
+                            installLibraryFiles(array_programs);
+                        }
+                    });
+                    stdin.on("end", function () {
+                        ended = true;
+                    });
+                }
                 _background();
                 break;
             default:
@@ -303,6 +320,18 @@ var CMD_MODULE = (function () {
                 x.dependencies.forEach(function (x) { if (!libraries[x]) { console.log("Error, the required dependency " + x + " is not installed."); return; } });
             }
             libraries[x.name] = x;
+
+            var fs = FS();
+            var sFile = Stream();
+            fs.writeFile("/usr/lib/" + x.name, sFile);
+            var fileContent = JSONtoJS(serialize(x))
+            sFile.write(fileContent);
+            sFile.end();
+
+            sFile = Stream();
+            fs.appendFile("/usr/lib_list", sFile);
+            sFile.write("/usr/lib/" + x.name + "\n");
+            sFile.end();
         });
     }
 
