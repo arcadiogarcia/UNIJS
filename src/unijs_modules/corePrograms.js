@@ -457,3 +457,15 @@ corePrograms.push({
         location=location; //F5
     }
 });
+
+corePrograms.push({
+    name: "uniq",
+    alias: [],
+    man: "This program deletes duplicated lines",
+    entryPoint: function (argv, stdin, stdout, stderr, include, async) {
+            var h={};
+            stdin.on("data", function (data) { if(h[data]){}else{h[data]=true;stdout.write(data);} });
+            stdin.on("end", function () { async.return() });
+            async.background();
+    }
+});

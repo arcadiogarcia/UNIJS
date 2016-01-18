@@ -303,10 +303,6 @@ var CMD_MODULE = (function () {
             sFile.write(fileContent);
             sFile.end();
 
-            sFile = Stream();
-            fs.appendFile("/usr/bin_list", sFile);
-            sFile.write("/usr/bin/" + x.name + "\n");
-            sFile.end();
         });
     }
 
@@ -328,10 +324,6 @@ var CMD_MODULE = (function () {
             sFile.write(fileContent);
             sFile.end();
 
-            sFile = Stream();
-            fs.appendFile("/usr/lib_list", sFile);
-            sFile.write("/usr/lib/" + x.name + "\n");
-            sFile.end();
         });
     }
 

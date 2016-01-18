@@ -325,7 +325,7 @@ var FS = (function () {
                     return "Locked";
                 }
                 Stream.executeAsync(function () {
-                    var chunks = file.getData().split("\n").map(function (x) { return x + "\n" });
+                    var chunks = file.getData().split("\n").map(function (x) { return x });
                     if (chunks[chunks.length - 1] == "\n") {
                         chunks.pop();//To avoid creating a new empty line
                     }
