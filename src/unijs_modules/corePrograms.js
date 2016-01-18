@@ -421,8 +421,13 @@ corePrograms.push({
                     return;
                 }else if(input.flags.g){
                     names.forEach(function(x){        
-                            content='({name: "'+x+'", dependencies: [], content: function () {return "Hello world! I\'m '+x+'.";}})';                  
+                            content='({name: "'+x+'", dependencies: [], payload:"'+x+'", entryPoint:"index.html"})';                  
                             fs.createFile(x+".app.njs", content);
+                            fs.createFolder(x);
+                            fs.navigatePath(x);
+                            content='<html><body style="background:white">Hello World</body></html>';                  
+                            fs.createFile("index.html", content);
+                            fs.navigateUp();
                             stdout.write("File "+x+".app.njs created successfully.");
                     });      
                 }else if(input.flags.l){

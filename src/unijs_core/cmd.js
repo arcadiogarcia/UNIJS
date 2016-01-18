@@ -209,11 +209,11 @@ var CMD_MODULE = (function () {
                 if (argv.length > 1) {
                     installProgramFiles(argv.splice(1));
                 } else {
-                    ended=false;
+                    ended = false;
                     var array_programs = [];
                     stdin.on("data", function (x) {
                         array_programs.push(x);
-                        if(array_programs.length==1){
+                        if (array_programs.length == 1) {
                             installProgramFiles(array_programs);
                         }
                     });
@@ -247,14 +247,54 @@ var CMD_MODULE = (function () {
                     file.on("end", function () { var program = eval(content); registerLibraries([program]); stdout.write("Program " + x + " sucessfully installed."); installLibraryFiles(array); });
                 }
                 if (argv.length > 1) {
-                   installLibraryFiles(argv.splice(1));
+                    installLibraryFiles(argv.splice(1));
                 } else {
-                    ended=false;
+                    ended = false;
                     var array_programs = [];
                     stdin.on("data", function (x) {
                         array_programs.push(x);
-                        if(array_programs.length==1){
+                        if (array_programs.length == 1) {
                             installLibraryFiles(array_programs);
+                        }
+                    });
+                    stdin.on("end", function () {
+                        ended = true;
+                    });
+                }
+                _background();
+                break;
+            case "install-app":
+                var ended = true;// Only used for async form stdin
+                function installAppFiles(array) {
+                    if (array.length == 0) {
+                        if (ended == true) {
+                            _return();
+                        }
+                        return;
+                    }
+                    var x = array.shift().trim();
+                    var file = fs.readFile(x);
+                    if (file === false) {
+                        stderr.write("File " + x + " does not exist.");
+                        return;
+                    }
+                    if (file === "Locked") {
+                        stderr.write("File " + x + " is locked by another program.");
+                        return;
+                    }
+                    var content = "";
+                    file.on("data", function (data) { content += data; });
+                    file.on("end", function () { var program = eval(content); registerApps([program]); stdout.write("App " + x + " sucessfully installed."); installAppFiles(array); });
+                }
+                if (argv.length > 1) {
+                    installAppFiles(argv.splice(1));
+                } else {
+                    ended = false;
+                    var array_programs = [];
+                    stdin.on("data", function (x) {
+                        array_programs.push(x);
+                        if (array_programs.length == 1) {
+                            installAppFiles(array_programs);
                         }
                     });
                     stdin.on("end", function () {
@@ -265,9 +305,32 @@ var CMD_MODULE = (function () {
                 break;
             default:
                 if (programs[command]) {
-                    var async = { return: _return, background: _background };
-                    var include = function (x) { if (x == "fs") { return fs } return libraries[x].content };
-                    programs[command].entryPoint(argv, stdin, stdout, stderr, include, async);
+                    var program = programs[command];
+                    if (program.isApp) {
+                        var path = fs.getCurrentPath();
+                        fs.navigatePath("usr/app/" + program.name + "/payload");
+                        libraries["file-system"].content.getFileContent(program.entryPoint, function (content) {
+                            fs.navigatePath(path);
+                            if(content==false){
+                                stderr.write("Error executing the app, can't open the entry point.");
+                                _return();
+                                return;
+                            }
+                            var rect;
+                            if (w) {
+                                rect = w.div.getBoundingClientRect();
+                            } else {
+                                rect = { left: 50, top: 50 };
+                            }
+                            manager.GraphicWindow(rect.left + 50, rect.top + 50, content, true, { fs: fs });
+                            _return();
+                        },fs);
+                        _background();
+                    } else {
+                        var async = { return: _return, background: _background };
+                        var include = function (x) { if (x == "fs") { return fs } return libraries[x].content };
+                        program.entryPoint(argv, stdin, stdout, stderr, include, async);
+                    }
                 } else {
                     stderr.write("Unknown command \"" + command + "\"");
                 }
@@ -324,6 +387,40 @@ var CMD_MODULE = (function () {
             sFile.write(fileContent);
             sFile.end();
 
+        });
+    }
+
+    function registerApps(packages) {
+        packages.forEach(function (x) {
+            var fs = FS();
+            var path = fs.getCurrentPath();
+            if (programs[x.name]) {
+                console.log("The program " + x.name + " is already installed");
+                return;
+            }
+            if (x.dependencies) {
+                x.dependencies.forEach(function (x) { if (!libraries[x]) { console.log("Error, the required dependency " + x + " is not installed."); return; } });
+            }
+            programs[x.name] = x;
+            programs[x.name].isApp = true;
+            if (x.alias) {
+                x.alias.forEach(function (y) {
+                    alias[y] = x.name;
+                });
+            }
+
+            var fs = FS();
+            var sFile = Stream();
+            fs.navigatePath("/usr/app/");
+            fs.createFolder(x.name);
+            fs.navigatePath(x.name);
+            fs.writeFile("manifest.app.njs", sFile);
+            var fileContent = JSON.stringify(x);
+            sFile.write(fileContent);
+            sFile.end();
+            fs.createFolder("payload");
+            fs.navigatePath(path);
+            libraries["file-system"].content.copyFolder(x.payload, "/usr/app/" + x.name + "/payload", fs);
         });
     }
 

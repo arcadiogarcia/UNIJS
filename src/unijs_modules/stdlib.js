@@ -73,6 +73,23 @@ stdlib.push({
             } else {
                 fs.writeFile(dst, file);
             }
+        },
+        getFileContent: function (path, callback, fs) {
+            var file = fs.readFile(path);
+            if (file === false) {
+                callback(false);
+                return;
+            }
+            if (file === "Locked") {
+                callback(false);
+                return;
+            }
+            var content = "";
+            file.on("data", function (x) { content+=x; });
+            file.on("end", function () {
+                callback(content);
+            });
         }
     }
-});
+
+    });

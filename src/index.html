@@ -95,6 +95,7 @@ ls | install
                     fs.createFolder("usr");
                     fs.navigateChild("usr");
                     fs.createFolder("bin");
+                    fs.createFolder("app");
                     fs.createFolder("lib");
                     result=CMD.executeCommand("cmd /etc/unijs.init", Stream(), manager, w1);     
                     result.stderr.on("data", function(x){
