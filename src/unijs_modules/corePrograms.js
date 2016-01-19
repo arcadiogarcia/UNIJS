@@ -52,16 +52,16 @@ corePrograms.push({
         if (argv.length == 2) {
             var fs=include("fs");
             var file = fs.readFile(argv[1]);
-            if (file === false) {
-                stderr.write("File " + argv[1] + " does not exist.");
-                return;
-            }
-            if (file === "Locked") {
-                stderr.write("This file is locked by another program.");
-                return;
-            }
             file.on("data", function (data) { stdout.write(data) });
-            file.on("end", function () { async.return() });
+            file.on("end", function (x) {
+                if(x=="NOTFOUND"){
+                    stderr.write("File " + argv[1] + " does not exist.");
+                }
+                if(x=="LOCKED"){
+                    stderr.write("This file is locked by another program.");
+                }
+                async.return();
+            });
             async.background();
         } else {
             stderr.write("Incorrect number of arguments.");
@@ -242,7 +242,7 @@ corePrograms.push({
     man: "Retrieves content from the web.\n Execute 'curl <url>'",
     entryPoint: function (argv, stdin, stdout, stderr, include, async) {
         if (argv.length == 2) {
-            var xhr = XMLHttpRequest();
+            var xhr = new XMLHttpRequest();
             xhr.onload = function () {
                 if (this.status == 200) {
                     stdout.write(this.responseText);
@@ -366,7 +366,7 @@ corePrograms.push({
                 if(counter<message.length){
                     stdout.write(message[counter++]);
                 }else{
-                     async.return()
+                     async.return();
                 }
             },600);
             async.background();
@@ -374,35 +374,38 @@ corePrograms.push({
 
 
         var file = fs.readFile("/etc/tutorial/state.data");
-        if (file === "Locked") {
-            stderr.write("Error, maybe there is another instance of this program running?");
-            return;
-        }
-        if (file === false) {
-            fs.createFile("/etc/tutorial/state.data", 0);
-            printMessageSlow(0);
-        }else{
-            var content="";
-            file.on("data",function(x){
-                content+=x;
-            });
-            file.on("end",function(x){
-                if(argv.length==2){
-                    if(argv[1]=="next"){
-                        content = +(content)+1;
-                    }
-                    if(argv[1]=="reset"){
-                        content = 0;
-                    }
-                    var wStream=Stream();
-                    fs.writeFile("/etc/tutorial/state.data", wStream);
-                    wStream.write(content);
-                    wStream.end();
-                }         
-                printMessageSlow(+content);//Cast file content to a number
-            });
-            async();
-        }
+        var content = "";
+        file.on("data", function (x) {
+            content += x;
+        });
+        file.on("end", function (x) {
+            if (x == "NOTFOUND") {
+                fs.createFile("/etc/tutorial/state.data", 0);
+                printMessageSlow(0);
+                async.return();
+                return;
+            }
+            if (x == "LOCKED") {
+                stderr.write("Error, maybe there is another instance of this program running?");
+                async.return();
+                return;
+            }
+            if (argv.length == 2) {
+                if (argv[1] == "next") {
+                    content = +(content) + 1;
+                }
+                if (argv[1] == "reset") {
+                    content = 0;
+                }
+                var wStream = Stream();
+                fs.writeFile("/etc/tutorial/state.data", wStream);
+                wStream.write(content);
+                wStream.end();
+            }
+            printMessageSlow(+content);//Cast file content to a number
+        });
+        async();
+        
     }
 });
 

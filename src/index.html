@@ -69,6 +69,14 @@ ls | install
         
         loader.welcome();
         
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('workerProxy.js').then(function(registration) {
+                 console.log('ServiceWorker registration successful with scope: ',    registration.scope);
+              }).catch(function(err) {
+                 console.log('ServiceWorker registration failed: ', err);
+              });
+        }
+        
         initUNIJS(CBL.last(startUNIJS,2000));
         
         var CMD;

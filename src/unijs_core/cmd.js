@@ -83,17 +83,19 @@ var CMD_MODULE = (function () {
 
                 } else if (argc == 2) {
                     var file = fs.readFile(argv[1]);
-                    if (file === false) {
-                        stderr.write("File " + argv[1] + " does not exist.");
-                        return;
-                    }
-                    if (file === "Locked") {
-                        stderr.write("This file is locked by another program.");
-                        return;
-                    }
                     var initscript = [];
                     file.on("data", initscript.push.bind(initscript));
-                    file.on("end", function () {
+                    file.on("end", function (x) {
+                        if (x === "NOTFOUND") {
+                            stderr.write("File " + argv[1] + " does not exist.");
+                            _return();
+                            return;
+                        }
+                        if (x === "LOCKED") {
+                            stderr.write("This file is locked by another program.");
+                            _return();
+                            return;
+                        }
                         //Execute all instructions async one by one until the array is empty
                         
                         executeInstruction(initscript.map(function (x) { return inputHandler.bind(this, x.trim()); }));
@@ -194,17 +196,21 @@ var CMD_MODULE = (function () {
                     }
                     var x = array.shift().trim();
                     var file = fs.readFile(x);
-                    if (file === false) {
-                        stderr.write("File " + x + " does not exist.");
-                        return;
-                    }
-                    if (file === "Locked") {
-                        stderr.write("File " + x + " is locked by another program.");
-                        return;
-                    }
                     var content = "";
                     file.on("data", function (data) { content += data; });
-                    file.on("end", function () { var program = eval(content); registerPrograms([program]); stdout.write("Program " + x + " sucessfully installed."); installProgramFiles(array); });
+                    file.on("end", function (data) {
+                        if (data === "NOTFOUND") {
+                            stderr.write("File " + x + " does not exist.");
+                            return;
+                        }
+                        if (data === "LOCKED") {
+                            stderr.write("File " + x + " is locked by another program.");
+                            return;
+                        }
+                        var program = eval(content);
+                        registerPrograms([program]);
+                        stdout.write("Program " + x + " sucessfully installed."); installProgramFiles(array);
+                    });
                 }
                 if (argv.length > 1) {
                     installProgramFiles(argv.splice(1));
@@ -234,17 +240,22 @@ var CMD_MODULE = (function () {
                     }
                     var x = array.shift().trim();
                     var file = fs.readFile(x);
-                    if (file === false) {
-                        stderr.write("File " + x + " does not exist.");
-                        return;
-                    }
-                    if (file === "Locked") {
-                        stderr.write("File " + x + " is locked by another program.");
-                        return;
-                    }
                     var content = "";
                     file.on("data", function (data) { content += data; });
-                    file.on("end", function () { var program = eval(content); registerLibraries([program]); stdout.write("Program " + x + " sucessfully installed."); installLibraryFiles(array); });
+                    file.on("end", function (data) {
+                        if (data === "NOTFOUND") {
+                            stderr.write("File " + x + " does not exist.");
+                            return;
+                        }
+                        if (data === "LOCKED") {
+                            stderr.write("File " + x + " is locked by another program.");
+                            return;
+                        }
+                        var program = eval(content);
+                        registerLibraries([program]);
+                        stdout.write("Program " + x + " sucessfully installed.");
+                        installLibraryFiles(array);
+                    });
                 }
                 if (argv.length > 1) {
                     installLibraryFiles(argv.splice(1));
@@ -274,17 +285,23 @@ var CMD_MODULE = (function () {
                     }
                     var x = array.shift().trim();
                     var file = fs.readFile(x);
-                    if (file === false) {
-                        stderr.write("File " + x + " does not exist.");
-                        return;
-                    }
-                    if (file === "Locked") {
-                        stderr.write("File " + x + " is locked by another program.");
-                        return;
-                    }
+
                     var content = "";
                     file.on("data", function (data) { content += data; });
-                    file.on("end", function () { var program = eval(content); registerApps([program]); stdout.write("App " + x + " sucessfully installed."); installAppFiles(array); });
+                    file.on("end", function (data) {
+                        if (data === "NOTFOUND") {
+                            stderr.write("File " + x + " does not exist.");
+                            return;
+                        }
+                        if (data === "LOCKED") {
+                            stderr.write("File " + x + " is locked by another program.");
+                            return;
+                        }
+                        var program = eval(content);
+                        registerApps([program]);
+                        stdout.write("App " + x + " sucessfully installed.");
+                        installAppFiles(array);
+                    });
                 }
                 if (argv.length > 1) {
                     installAppFiles(argv.splice(1));
@@ -311,7 +328,7 @@ var CMD_MODULE = (function () {
                         fs.navigatePath("usr/app/" + program.name + "/payload");
                         libraries["file-system"].content.getFileContent(program.entryPoint, function (content) {
                             fs.navigatePath(path);
-                            if(content==false){
+                            if (content == false) {
                                 stderr.write("Error executing the app, can't open the entry point.");
                                 _return();
                                 return;
@@ -324,7 +341,7 @@ var CMD_MODULE = (function () {
                             }
                             manager.GraphicWindow(rect.left + 50, rect.top + 50, content, true, { fs: fs });
                             _return();
-                        },fs);
+                        }, fs);
                         _background();
                     } else {
                         var async = { return: _return, background: _background };
@@ -468,16 +485,18 @@ var CMD_MODULE = (function () {
             if (command.indexOf("<") != -1) {
                 subcommands = command.split("<");
                 var file = fs.readFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0]);
-                if (file === false) {
-                    stderr.write("File " + subcommands[1] + " does not exist.");
-                    stderr.end();
-                    return;
-                }
-                if (file === "Locked") {
-                    stderr.write("This file is locked by another program.");
-                    stderr.end();
-                    return;
-                }
+                file.on("end", function (data) {
+                    if (data === "NOTFOUND") {
+                        stderr.write("File " + subcommands[1] + " does not exist.");
+                        stderr.end();
+                        return;
+                    }
+                    if (data === "LOCKED") {
+                        stderr.write("This file is locked by another program.");
+                        stderr.end();
+                        return;
+                    }
+                });
                 currentStream = executeCommand(subcommands[0], file, stderr, w, fs, manager);
             } else if (command.indexOf(">>") != -1) {
                 subcommands = command.split(">>");
@@ -490,11 +509,13 @@ var CMD_MODULE = (function () {
                 var consolestream = Stream();
                 handlers.ctrld = function () { writestream.end() };
                 tee.on2("end", consolestream.end);
-                if (fs.appendFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
-                    stderr.write("This file is locked by another program.");
-                    stderr.end();
-                    return;
-                }
+                fs.appendFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream, function (x) {
+                    if (x === false) {
+                        stderr.write("This file is locked by another program.");
+                        stderr.end();
+                        return;
+                    }
+                });
                 currentStream = consolestream;
             } else if (command.indexOf(">") != -1) {
                 subcommands = command.split(">");
@@ -507,11 +528,13 @@ var CMD_MODULE = (function () {
                 var consolestream = Stream();
                 handlers.ctrld = function () { writestream.end() };
                 tee.on2("end", consolestream.end);
-                if (fs.writeFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], writestream) === false) {
-                    stderr.write("This file is locked by another program.");
-                    stderr.end();
-                    return;
-                }
+                fs.writeFile(subcommands[1].split(" ").filter(function (x) { return x != ""; })[0], function (x) {
+                    if (x === false) {
+                        stderr.write("This file is locked by another program.");
+                        stderr.end();
+                        return;
+                    }
+                });
                 currentStream = consolestream;
             } else {
                 currentStream = executeCommand(pipedCommands[i], currentStream, stderr, w, fs, manager);
