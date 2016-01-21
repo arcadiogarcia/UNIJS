@@ -179,15 +179,38 @@ corePrograms.push({
                 stderr.write("Destination does not exist. Maybe you have not created the folder yet?");
             } else if(t2=="folder"&&t1=="folder"){
                 var st=fslib.copyFolder(argv[1],argv[2],fs);
-                if(st.error){
-                    st.issues.forEach(stderr.write);
-                }else{
-                    stderr.write("Folder copied successfully");
-                }
+                var errors=false;
+                st.on("data",function(x){
+                    stderr.write(x);
+                    errors=true;
+                });
+                st.on("end",function(x){
+                    if(errors==false){
+                        stderr.write("Folder copied successfully");
+                    }
+                    async.return();
+                });
+                async.background();
             }else if((t2=="file"|| t2==false)&&t1=="file"){
-                fslib.copyFile(argv[1],argv[2],fs);
+                fslib.copyFile(argv[1],argv[2],fs,function(x){
+                    if(x==true) {
+                        stderr.write("File copied successfully");
+                    }else{
+                        stderr.write("Error: "+x);
+                    }
+                    async.return();
+                });
+                async.background();
             }else if(t2=="folder"&&t1=="file"){
-                fslib.copyFile(argv[1],argv[2]+"/"+argv[1].split("/").splice(-1, 1)[0],fs);
+                fslib.copyFile(argv[1],argv[2]+"/"+argv[1].split("/").splice(-1, 1)[0],fs,function(x){
+                    if(x==true) {
+                        stderr.write("File copied successfully");
+                    }else{
+                        stderr.write("Error: "+x);
+                    }
+                    async.return();
+                });
+                async.background();
             }    
         } else {
             stderr.write("Wrong number of parameters");
