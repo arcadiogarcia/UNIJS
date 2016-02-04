@@ -4997,6 +4997,7 @@
                     initialize();
                 }
                 self.oneTime(100, function() {
+                    try{
                     $win.bind('resize.terminal', function() {
                         if (self.is(':visible')) {
                             var width = self.width();
@@ -5007,6 +5008,9 @@
                             }
                         }
                     });
+                    }catch(e){
+                        
+                    }
                 });
                 // -------------------------------------------------------------
                 // :: helper

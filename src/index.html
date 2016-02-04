@@ -69,6 +69,19 @@ ls | install
         
         loader.welcome();
         
+
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('workerProxy.js').then(function (registration) {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                
+            }).catch(function (err) {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        }
+        
+        
+        
         initUNIJS(CBL.last(startUNIJS,2000));
         
         var CMD;
@@ -121,6 +134,70 @@ ls | install
                     loader.clear();
             },1000));
         }
+        
+        
+        (function fileSystemProxy() {
+
+
+            var db;
+            var request = indexedDB.open("sockets");
+            request.onerror = function (event) {
+                alert("Why didn't you allow my web app to use IndexedDB?!");
+            };
+            request.onsuccess = function (event) {
+                db = event.target.result;
+                setInterval(pollData,200);
+                db.onerror = function (event) {
+                    alert("Database error: " + event.target.errorCode);
+                };
+            };
+            request.onupgradeneeded = function (event) {
+                var db = event.target.result;
+
+                var objectStore = db.createObjectStore("fs", { keyPath: "id" });
+
+                objectStore.transaction.oncomplete = function (event) {
+
+                };
+            };
+            
+            var proxyFS = FS();
+            var lastPath;
+            function pollData(){
+                    var transaction = db.transaction(["fs"]);
+                    var objectStore = transaction.objectStore("fs");
+                    var request = objectStore.get("path");
+                    request.onerror = function (event) {
+                        // Handle errors!
+                    };
+                    request.onsuccess = function (event) {
+                        if(request.result && request.result.data!=lastPath){
+                            lastPath=request.result.data;
+                            console.log("fetching "+request.result.data);
+                            var transaction = db.transaction(["fs"], "readwrite");
+                            var objectStore = transaction.objectStore("fs");
+                            var f=proxyFS.readFile(request.result.data);
+                            if(f==false || f=="Locked"){
+                                objectStore.add({ id: "data", data: false });
+                            }else{
+                                var content="";
+                                f.on("data", function(x){content+=x;});
+                                f.on("end", function(x){
+                                    console.log("fetched "+content);
+                                    var transaction = db.transaction(["fs"], "readwrite");
+                                    var objectStore = transaction.objectStore("fs");
+                                    objectStore.add({ id: "data", data: content });
+                                });
+                            }                       
+                        }else{
+                            
+                        }
+                    };
+                
+            }
+
+
+        })();
                     </script>
 </body>
 

@@ -309,22 +309,29 @@ var CMD_MODULE = (function () {
                     if (program.isApp) {
                         var path = fs.getCurrentPath();
                         fs.navigatePath("usr/app/" + program.name + "/payload");
-                        libraries["file-system"].content.getFileContent(program.entryPoint, function (content) {
-                            fs.navigatePath(path);
-                            if(content==false){
-                                stderr.write("Error executing the app, can't open the entry point.");
-                                _return();
-                                return;
-                            }
-                            var rect;
+                         var rect;
                             if (w) {
                                 rect = w.div.getBoundingClientRect();
                             } else {
                                 rect = { left: 50, top: 50 };
                             }
-                            manager.GraphicWindow(rect.left + 50, rect.top + 50, content, true, { fs: fs });
-                            _return();
-                        },fs);
+                        manager.GraphicWindow(rect.left + 50, rect.top + 50, "fileSystem//usr/app/" + program.name + "/payload/"+program.entryPoint, false, { fs: fs });
+                        // libraries["file-system"].content.getFileContent(program.entryPoint, function (content) {
+                        //     fs.navigatePath(path);
+                        //     if(content==false){
+                        //         stderr.write("Error executing the app, can't open the entry point.");
+                        //         _return();
+                        //         return;
+                        //     }
+                        //     var rect;
+                        //     if (w) {
+                        //         rect = w.div.getBoundingClientRect();
+                        //     } else {
+                        //         rect = { left: 50, top: 50 };
+                        //     }
+                        //     manager.GraphicWindow(rect.left + 50, rect.top + 50, content, true, { fs: fs });
+                        //     _return();
+                        // },fs);
                         _background();
                     } else {
                         var async = { return: _return, background: _background };
